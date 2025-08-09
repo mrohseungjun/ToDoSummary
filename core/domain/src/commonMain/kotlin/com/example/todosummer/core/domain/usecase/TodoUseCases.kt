@@ -10,6 +10,13 @@ import kotlinx.coroutines.flow.Flow
 class TodoUseCases(
     private val repository: TodoRepository
 ) {
+    val getTodos = GetTodosUseCase(repository)
+    val getTodoById = GetTodoByIdUseCase(repository)
+    val addTodo = AddTodoUseCase(repository)
+    val updateTodo = UpdateTodoUseCase(repository)
+    val deleteTodo = DeleteTodoUseCase(repository)
+    val toggleTodoCompletion = ToggleTodoCompletionUseCase(repository)
+
     /**
      * 모든 Todo 항목을 가져오는 유스케이스
      */

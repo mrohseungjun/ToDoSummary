@@ -6,12 +6,12 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.example.todosummer.core.ui.theme.ThemeMode
 
 // 라이트 모드 색상
 private val LightColorScheme = lightColorScheme(
@@ -72,14 +72,6 @@ private val DarkColorScheme = darkColorScheme(
     inverseSurface = md_theme_dark_inverseSurface,
     inversePrimary = md_theme_dark_inversePrimary,
 )
-
-// 테마 설정을 위한 LocalComposition
-val LocalThemeMode = compositionLocalOf { ThemeMode.SYSTEM }
-
-// 테마 모드 열거형
-enum class ThemeMode {
-    LIGHT, DARK, SYSTEM
-}
 
 /**
  * 앱의 테마를 설정하는 컴포저블

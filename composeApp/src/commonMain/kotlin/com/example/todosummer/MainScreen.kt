@@ -2,9 +2,9 @@ package com.example.todosummer
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -99,7 +99,7 @@ private fun BottomNavigation(
         )
         
         NavigationBarItem(
-            icon = { Icon(Icons.Default.AutoAwesome, contentDescription = strings.aiSummaryTitle) },
+            icon = { Icon(Icons.Default.Star, contentDescription = strings.aiSummaryTitle) },
             label = { Text(strings.aiSummaryTitle) },
             selected = selectedTab == Tab.AI,
             onClick = { onTabSelected(Tab.AI) }

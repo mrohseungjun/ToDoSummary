@@ -3,6 +3,7 @@ package com.example.todosummer.core.data.source.local
 import com.example.todosummer.core.data.model.TodoEntity
 import com.example.todosummer.core.data.source.TodoDataSource
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -21,7 +22,7 @@ class TodoLocalDataSource : TodoDataSource {
     private val _todos = MutableStateFlow<Map<String, TodoEntity>>(emptyMap())
     
     override fun getTodos(): Flow<List<TodoEntity>> {
-        return _todos.asStateFlow().kotlinx.coroutines.flow.map { it.values.toList() }
+        return _todos.asStateFlow().map { it.values.toList() }
     }
     
     override suspend fun getTodoById(id: String): TodoEntity? {
@@ -64,7 +65,7 @@ class TodoLocalDataSource : TodoDataSource {
     }
     
     private fun generateId(): String {
-        return System.currentTimeMillis().toString()
+        return Clock.System.now().toEpochMilliseconds().toString()
     }
     
     companion object {

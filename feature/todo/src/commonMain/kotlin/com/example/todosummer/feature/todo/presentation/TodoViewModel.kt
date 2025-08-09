@@ -34,7 +34,7 @@ class TodoViewModel(
      */
     fun loadTodos() {
         coroutineScope.launch {
-            todoUseCases.GetTodosUseCase(todoUseCases.repository).invoke().collect { todos ->
+            todoUseCases.getTodos().collect { todos ->
                 _state.update { it.copy(todos = todos) }
             }
         }
@@ -60,7 +60,7 @@ class TodoViewModel(
         )
         
         coroutineScope.launch {
-            todoUseCases.AddTodoUseCase(todoUseCases.repository).invoke(todo)
+            todoUseCases.addTodo(todo)
         }
     }
     
@@ -69,7 +69,12 @@ class TodoViewModel(
      */
     fun deleteTodo(id: String) {
         coroutineScope.launch {
-            todoUseCases.DeleteTodoUseCase(todoUseCases.repository).invoke(id)
+            try {
+                todoUseCases.deleteTodo(id)
+                loadTodos() // 삭제 후 목록 새로고침
+            } catch (e: Exception) {
+                _state.update { it.copy(error = "삭제 중 오류가 발생했습니다: ${e.message}") }
+            }
         }
     }
     
@@ -78,7 +83,12 @@ class TodoViewModel(
      */
     fun toggleTodoCompletion(id: String) {
         coroutineScope.launch {
-            todoUseCases.ToggleTodoCompletionUseCase(todoUseCases.repository).invoke(id)
+            try {
+                todoUseCases.toggleTodoCompletion(id)
+                loadTodos() // 상태 변경 후 목록 새로고침
+            } catch (e: Exception) {
+                _state.update { it.copy(error = "상태 변경 중 오류가 발생했습니다: ${e.message}") }
+            }
         }
     }
     
@@ -87,10 +97,15 @@ class TodoViewModel(
      */
     fun updateTodo(todo: Todo) {
         coroutineScope.launch {
-            val updatedTodo = todo.copy(
-                updatedAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-            )
-            todoUseCases.UpdateTodoUseCase(todoUseCases.repository).invoke(updatedTodo)
+            try {
+                val updatedTodo = todo.copy(
+                    updatedAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                )
+                todoUseCases.updateTodo(updatedTodo)
+                loadTodos() // 업데이트 후 목록 새로고침
+            } catch (e: Exception) {
+                _state.update { it.copy(error = "업데이트 중 오류가 발생했습니다: ${e.message}") }
+            }
         }
     }
 }

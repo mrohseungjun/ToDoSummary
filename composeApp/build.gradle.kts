@@ -54,6 +54,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.koin.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -64,6 +65,18 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            
+            // Project modules
+            implementation(project(":core:ui"))
+            implementation(project(":core:data"))
+            implementation(project(":core:domain"))
+            implementation(project(":core:common"))
+            implementation(project(":feature:todo"))
+            implementation(project(":feature:ai"))
+            
+            // Koin
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -101,4 +114,3 @@ android {
 dependencies {
     debugImplementation(compose.uiTooling)
 }
-

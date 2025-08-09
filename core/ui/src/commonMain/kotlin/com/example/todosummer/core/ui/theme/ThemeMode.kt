@@ -7,7 +7,7 @@ enum class ThemeMode {
     LIGHT,
     DARK,
     SYSTEM;
-    
+
     companion object {
         /**
          * 문자열로부터 테마 모드를 반환합니다.

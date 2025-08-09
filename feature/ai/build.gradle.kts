@@ -1,17 +1,20 @@
 import org.jetbrains.compose.ExperimentalComposeLibrary
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
 }
 
 kotlin {
     androidTarget {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
     
@@ -24,6 +27,11 @@ kotlin {
             baseName = "ai"
             isStatic = true
         }
+    }
+    
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
     }
 
     sourceSets {
@@ -43,11 +51,15 @@ kotlin {
         }
         
         androidMain.dependencies {
-            // Android-specific Gemma dependencies
+            // Android-specific ML Kit dependencies
             implementation("org.tensorflow:tensorflow-lite:2.14.0")
             implementation("org.tensorflow:tensorflow-lite-gpu:2.14.0")
             implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+            // 클라우드 기반 Gemma API
             implementation("com.google.ai.client.generativeai:generativeai:0.2.0")
+            
+            // ML Kit GenAI API - 아직 공식 배포 전
+            // implementation("com.google.mlkit:genai-summarization:0.1.0")
         }
         
         commonTest.dependencies {

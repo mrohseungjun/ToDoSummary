@@ -12,6 +12,7 @@ interface StringResources {
     val appName: String
     val ok: String
     val cancel: String
+    val confirm: String
     val save: String
     val delete: String
     val edit: String
@@ -63,6 +64,7 @@ class EnglishStringResources : StringResources {
     override val appName: String = "Todo Summer"
     override val ok: String = "OK"
     override val cancel: String = "Cancel"
+    override val confirm: String = "Confirm"
     override val save: String = "Save"
     override val delete: String = "Delete"
     override val edit: String = "Edit"
@@ -114,6 +116,7 @@ class KoreanStringResources : StringResources {
     override val appName: String = "투두 서머"
     override val ok: String = "확인"
     override val cancel: String = "취소"
+    override val confirm: String = "확인"
     override val save: String = "저장"
     override val delete: String = "삭제"
     override val edit: String = "편집"

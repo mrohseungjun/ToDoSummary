@@ -3,9 +3,8 @@ package com.example.todosummer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.example.todosummer.core.data.repository.TodoRepositoryImpl
-import com.example.todosummer.core.data.source.TodoLocalDataSource
+import com.example.todosummer.core.data.source.local.TodoLocalDataSource
 import com.example.todosummer.core.domain.usecase.TodoUseCases
-import com.example.todosummer.feature.ai.data.GemmaSummaryGenerator
 import com.example.todosummer.feature.ai.presentation.SummaryViewModel
 import com.example.todosummer.feature.todo.presentation.TodoViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -43,4 +42,5 @@ fun App() {
  * 플랫폼에 맞는 SummaryGenerator를 생성합니다.
  * 실제 구현은 각 플랫폼별 소스셋에서 제공됩니다.
  */
+@Composable
 expect fun createSummaryGenerator(): com.example.todosummer.feature.ai.domain.SummaryGenerator

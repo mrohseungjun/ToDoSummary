@@ -3,7 +3,6 @@ package com.example.todosummer
 import android.content.Context
 import com.example.todosummer.feature.ai.data.GemmaSummaryGenerator
 import com.example.todosummer.feature.ai.domain.SummaryGenerator
-import org.jetbrains.compose.ui.platform.AndroidUiDispatcher
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember

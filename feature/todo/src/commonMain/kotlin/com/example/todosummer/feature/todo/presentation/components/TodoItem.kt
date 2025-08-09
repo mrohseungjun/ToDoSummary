@@ -36,9 +36,7 @@ import com.example.todosummer.core.domain.model.Todo
 import com.example.todosummer.core.ui.theme.priorityHigh
 import com.example.todosummer.core.ui.theme.priorityLow
 import com.example.todosummer.core.ui.theme.priorityMedium
-import kotlinx.datetime.toJavaLocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import kotlinx.datetime.LocalDateTime
 
 /**
  * Todo 항목을 표시하는 컴포저블
@@ -155,7 +153,6 @@ fun PriorityIndicator(priority: Priority) {
 /**
  * 날짜 포맷팅 함수
  */
-private fun formatDate(date: kotlinx.datetime.LocalDateTime): String {
-    val javaLocalDateTime = date.toJavaLocalDateTime()
-    return DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).format(javaLocalDateTime)
+private fun formatDate(date: LocalDateTime): String {
+    return "${date.year}년 ${date.monthNumber}월 ${date.dayOfMonth}일"
 }
