@@ -1,5 +1,3 @@
-import org.jetbrains.compose.ExperimentalComposeLibrary
-
 plugins {
     id("todosummer.kmp.library")
     alias(libs.plugins.composeMultiplatform)
@@ -7,17 +5,13 @@ plugins {
 }
 
 kotlin {
-
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":core:common"))
-            implementation(project(":core:designsystem"))
-            
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
+            implementation(compose.ui)
             implementation(compose.materialIconsExtended)
-            @OptIn(ExperimentalComposeLibrary::class)
             implementation(compose.components.resources)
         }
         commonTest.dependencies {
@@ -27,6 +21,5 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.todosummer.core.ui"
+    namespace = "com.example.todosummer.core.designsystem"
 }
-

@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
+import com.example.todosummer.core.designsystem.theme.DSTheme
 
 // 라이트 모드 색상
 private val LightColorScheme = lightColorScheme(
@@ -85,11 +86,13 @@ fun AppTheme(
     }
     
     CompositionLocalProvider(LocalThemeMode provides themeMode) {
-        MaterialTheme(
-            colorScheme = colorScheme,
-            typography = Typography,
-            content = content
-        )
+        DSTheme {
+            MaterialTheme(
+                colorScheme = colorScheme,
+                typography = Typography,
+                content = content
+            )
+        }
     }
 }
 
