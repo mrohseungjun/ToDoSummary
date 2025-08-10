@@ -2,8 +2,8 @@ import org.jetbrains.compose.ExperimentalComposeLibrary
 
 plugins {
     id("todosummer.kmp.library")
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
+    id("todosummer.kmp.android")
+    id("todosummer.compose.multiplatform")
 }
 
 kotlin {
@@ -16,6 +16,8 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
+            // MPP-compatible Material Icons Extended (exposed to consumers)
+            @OptIn(ExperimentalComposeLibrary::class)
             implementation(compose.materialIconsExtended)
             @OptIn(ExperimentalComposeLibrary::class)
             implementation(compose.components.resources)
@@ -29,4 +31,3 @@ kotlin {
 android {
     namespace = "com.example.todosummer.core.ui"
 }
-

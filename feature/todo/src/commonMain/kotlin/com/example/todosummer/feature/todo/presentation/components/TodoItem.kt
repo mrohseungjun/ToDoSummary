@@ -13,9 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -28,11 +25,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.todosummer.core.common.localization.stringResource
 import com.example.todosummer.core.domain.model.Priority
 import com.example.todosummer.core.domain.model.Todo
+import com.example.todosummer.core.ui.AppIcons
 import com.example.todosummer.core.ui.theme.priorityHigh
 import com.example.todosummer.core.ui.theme.priorityLow
 import com.example.todosummer.core.ui.theme.priorityMedium
@@ -114,15 +111,15 @@ fun TodoItem(
             // 액션 버튼
             IconButton(onClick = onEdit) {
                 Icon(
-                    imageVector = Icons.Default.Edit,
+                    imageVector = AppIcons.Edit,
                     contentDescription = strings.editTodo,
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
             
             IconButton(onClick = onDelete) {
                 Icon(
-                    imageVector = Icons.Default.Delete,
+                    imageVector = AppIcons.Delete,
                     contentDescription = strings.deleteTodo,
                     tint = MaterialTheme.colorScheme.error
                 )

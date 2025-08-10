@@ -2,6 +2,7 @@ rootProject.name = "TodoSummer"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             mavenContent {
@@ -37,4 +38,3 @@ include(":core:buildconfig")
 include(":feature:todo")
 include(":feature:ai")
 include(":core:designsystem")
-includeBuild("build-logic")

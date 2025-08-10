@@ -1,58 +1,18 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidApplication)
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
+    id("todosummer.kmp.application")
 }
 
 kotlin {
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
     
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-        }
-    }
-    
-    // wasm 타깃은 옵션으로 제공 (기본 비활성화).
-    // 필요 시: ./gradlew -PenableWasm=true composeApp:wasmJsBrowserDevelopmentRun
-    if ((project.findProperty("enableWasm") as? String)?.toBoolean() == true) {
-        @Suppress("OPT_IN_USAGE")
-        @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
-        wasmJs {
-            outputModuleName.set("composeApp")
-            browser {
-                val rootDirPath = project.rootDir.path
-                val projectDirPath = project.projectDir.path
-                commonWebpackConfig {
-                    outputFileName = "composeApp.js"
-                    devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                        static = (static ?: mutableListOf()).apply {
-                            // Serve sources to debug inside browser
-                            add(rootDirPath)
-                            add(projectDirPath)
-                        }
-                    }
-                }
-            }
-            binaries.executable()
-        }
-    }
     
     sourceSets {
         androidMain.dependencies {
@@ -110,8 +70,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 

@@ -1,18 +1,18 @@
 plugins {
     id("todosummer.kmp.library")
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
+    id("todosummer.kmp.android")
+    id("todosummer.compose.multiplatform")
 }
 
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
+            // Compose core deps는 convention에서 주입됨(runtime/foundation/ui/resources)
             implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.materialIconsExtended)
-            implementation(compose.components.resources)
+        }
+        androidMain.dependencies {
+            // material-icons-extended를 libs.versions.toml에서 정의한 의존성으로 변경
+            implementation(libs.compose.material.icons.extended)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
