@@ -1,6 +1,7 @@
 package com.example.todosummer.convention
 
 import com.android.build.api.dsl.LibraryExtension
+import com.example.todosummer.primitive.composeMultiplatformDependencies
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
@@ -24,6 +25,7 @@ class KotlinMultiPlatformFeatureConventionPlugin : Plugin<Project> {
         extensions.configure<KotlinMultiplatformExtension> { configureKmp(this) }
         extensions.configure<LibraryExtension> { configureAndroid(this) }
         configureDependencies()
+        composeMultiplatformDependencies()
     }
 
     private fun Project.configureKmp(kmp: KotlinMultiplatformExtension) = kmp.apply {

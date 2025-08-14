@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.todosummer.core.common.localization.stringResource
 import com.example.todosummer.core.domain.model.Priority
@@ -90,7 +91,7 @@ fun TodoItem(
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 Text(
-                    text = todo.description,
+                    text = todo.description ?: "",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,

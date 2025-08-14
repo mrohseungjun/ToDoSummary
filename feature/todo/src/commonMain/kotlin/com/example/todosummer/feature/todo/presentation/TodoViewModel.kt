@@ -43,7 +43,7 @@ class TodoViewModel(
     /**
      * 새로운 Todo 항목을 추가합니다.
      */
-    fun addTodo(title: String, description: String, priority: Priority, dueDate: LocalDateTime? = null) {
+    fun addTodo(title: String, description: String?, priority: Priority, dueDate: LocalDateTime? = null) {
         if (title.isBlank()) return
         
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())

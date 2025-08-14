@@ -16,11 +16,12 @@ kotlin = "2.2.0"
 detekt = "1.23.8"
 koin = "3.5.3"
 koin-compose = "1.1.2"
-room = "2.6.1"
 kotlinx-coroutines = "1.8.0"
 kotlinx-datetime = "0.5.0"
 kotlinx-serialization = "1.6.2"
-ksp = "2.2.0-1.0.25"
+room = "2.7.2"
+sqlite = "2.5.2"          # bundled sqlite
+ksp = "2.2.0-2.0.2"     # Kotlin 2.2.0 대응 KSP
 roborazzi = "1.0.0"
 
 [libraries]
@@ -53,7 +54,11 @@ koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
 # Room
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+androidx-room-sqlite-wrapper = { module = "androidx.room:room-sqlite", version.ref = "room" } # (옵션, Android만)
+
+# Gradle Plugin marker artifacts (for convention plugins)
+ksp-gradle-plugin = { module = "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
 
 # Kotlinx
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -77,3 +82,4 @@ composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "k
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+androidx-room = { id = "androidx.room", version.ref = "room" }

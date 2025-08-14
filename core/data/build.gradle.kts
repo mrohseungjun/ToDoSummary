@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     id("todosummer.kmp.library")
     id("todosummer.kmp.android")
+    id("todosummer.room.multiplatform")
     alias(libs.plugins.kotlinSerialization)
 }
 
@@ -23,8 +24,7 @@ kotlin {
         androidMain.dependencies {
             // Room
             implementation(libs.room.runtime)
-            implementation(libs.room.ktx)
-            
+
             // Koin Android
             implementation(libs.koin.android)
         }

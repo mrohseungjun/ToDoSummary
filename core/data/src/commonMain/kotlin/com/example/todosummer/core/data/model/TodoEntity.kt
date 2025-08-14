@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 data class TodoEntity(
     val id: String,
     val title: String,
-    val description: String,
+    val description: String?,
     val isCompleted: Boolean,
     val createdAt: String, // LocalDateTime을 String으로 저장
     val updatedAt: String? = null,
