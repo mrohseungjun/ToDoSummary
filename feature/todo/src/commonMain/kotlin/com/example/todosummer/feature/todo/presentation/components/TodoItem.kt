@@ -31,6 +31,7 @@ import com.example.todosummer.core.common.localization.stringResource
 import com.example.todosummer.core.domain.model.Priority
 import com.example.todosummer.core.domain.model.Todo
 import com.example.todosummer.core.ui.AppIcons
+import com.example.todosummer.core.ui.theme.Dimens
 import com.example.todosummer.core.ui.theme.priorityHigh
 import com.example.todosummer.core.ui.theme.priorityLow
 import com.example.todosummer.core.ui.theme.priorityMedium
@@ -52,15 +53,15 @@ fun TodoItem(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = Dimens.spacing4)
             .clickable { onEdit() },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(Dimens.radius8),
+        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevation2)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(Dimens.spacing12),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // 완료 체크박스
@@ -69,12 +70,12 @@ fun TodoItem(
                 onCheckedChange = { onToggleCompletion() }
             )
             
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(Dimens.spacing8))
             
             // 우선순위 표시
             PriorityIndicator(priority = todo.priority)
             
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(Dimens.spacing12))
             
             // Todo 내용
             Column(
@@ -88,7 +89,7 @@ fun TodoItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(Dimens.spacing4))
                 
                 Text(
                     text = todo.description ?: "",
@@ -100,7 +101,7 @@ fun TodoItem(
                 
                 // 마감일이 있는 경우 표시
                 todo.dueDate?.let { dueDate ->
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(Dimens.spacing4))
                     Text(
                         text = "${strings.todoDueDate}: ${formatDate(dueDate)}",
                         style = MaterialTheme.typography.bodySmall,
@@ -142,7 +143,7 @@ fun PriorityIndicator(priority: Priority) {
     
     Box(
         modifier = Modifier
-            .size(16.dp)
+            .size(Dimens.size16)
             .clip(CircleShape)
             .background(color)
     )

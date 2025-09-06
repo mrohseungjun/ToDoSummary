@@ -21,6 +21,11 @@ internal fun Project.composeMultiplatformDependencies() {
                     implementation(composeDependencies.components.resources)
                     implementation(composeDependencies.components.uiToolingPreview)
                     implementation(libs.findLibrary("compose-material3").get())
+                }
+            }
+            // material-icons-extended는 Android/JVM 전용이므로 androidMain에만 추가
+            androidMain {
+                dependencies {
                     implementation(libs.findLibrary("compose-material-icons-extended").get())
                 }
             }

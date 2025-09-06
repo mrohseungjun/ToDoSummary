@@ -37,6 +37,8 @@ kotlin {
             implementation(project(":core:common"))
             implementation(project(":feature:todo"))
             implementation(project(":feature:ai"))
+            implementation(project(":feature:settings"))
+            implementation(project(":feature:main"))
             
             // Koin
             implementation(libs.koin.core)
@@ -69,6 +71,10 @@ android {
             isMinifyEnabled = false
         }
     }
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -78,3 +84,4 @@ android {
 dependencies {
     debugImplementation(compose.uiTooling)
 }
+

@@ -21,3 +21,29 @@ We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public S
 If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
 
 You can open the web application by running the `:composeApp:wasmJsBrowserDevelopmentRun` Gradle task.
+
+## Modules and Dependencies
+
+```
+composeApp
+  ├─ depends on: core:ui, core:data, core:domain, core:common
+  ├─ depends on: feature:main  ← root feature (navigation, bottom bar, tab orchestration)
+  ├─ (temporary) depends on: feature:todo, feature:ai, feature:settings
+
+feature:main → feature:todo, feature:ai, feature:settings, core:ui, core:common
+
+feature:todo → core:ui, core:domain
+feature:ai   → core:ui, core:domain
+feature:settings → core:ui, core:common
+
+core:domain → core:common
+core:data   → core:domain, core:common
+core:ui     → core:common
+```
+
+Direction guarantees: feature → domain → data → core (no reverse or cyclic deps).
+
+Notes:
+- feature:main owns the app-level UI shell (tabs, navigation, bottom bar) and composes individual feature routes.
+- composeApp remains the application entry and initializes DI; it delegates screen composition to feature:main.
+- Direct dependencies from composeApp to feature:todo/ai/settings will be removed after fully migrating to feature:main routing.
