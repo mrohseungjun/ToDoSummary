@@ -1,10 +1,5 @@
 package com.example.todosummer.feature.todo.presentation
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -44,7 +39,6 @@ import com.example.todosummer.core.ui.AppIcons
 import com.example.todosummer.core.ui.components.AppFab
 import com.example.todosummer.core.ui.components.AppTopBar
 import com.example.todosummer.core.ui.theme.Dimens
-import kotlinx.datetime.LocalDateTime
 import com.example.todosummer.feature.todo.presentation.components.TodoEditScreen
 import com.example.todosummer.feature.todo.presentation.components.TodoItem
 import org.koin.compose.koinInject
@@ -125,20 +119,13 @@ fun TodoListScreen(
                     Text(
                         text = "오늘 할 일",
                         style = MaterialTheme.typography.headlineLarge,
-                        modifier = Modifier.padding(top = Dimens.spacing8)
+                        
                     )
                     Text(
                         text = "${today.year}년 ${today.monthNumber}월 ${today.dayOfMonth}일",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = Dimens.spacing4, bottom = Dimens.spacing12)
-                    )
-
-                    // 요약 보기 카드
-                    SummaryTile(
-                        title = strings.aiSummaryTitle,
-                        description = strings.aiSummarize,
-                        onClick = onOpenAISummary
                     )
 
                     Spacer(modifier = Modifier.height(Dimens.spacing12))
@@ -198,12 +185,8 @@ fun TodoListScreen(
         }
     }
     
-    // 할 일 추가/편집 다이얼로그
-    AnimatedVisibility(
-        visible = showAddEditDialog,
-        enter = fadeIn() + slideInVertically { it },
-        exit = fadeOut() + slideOutVertically { it }
-    ) {
+    // 할 일 추가/편집: 바텀 시트 표시
+    if (showAddEditDialog) {
         TodoEditScreen(
             todo = currentTodo,
             onSave = { todo ->
@@ -273,39 +256,6 @@ fun TodoList(
             )
             
             Spacer(modifier = Modifier.height(Dimens.spacing8))
-        }
-    }
-}
-
-@Composable
-private fun SummaryTile(
-    title: String,
-    description: String,
-    onClick: () -> Unit
-) {
-    androidx.compose.material3.Card(
-        onClick = onClick,
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(Dimens.radius8),
-        elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = Dimens.elevation2),
-        colors = androidx.compose.material3.CardDefaults.cardColors()
-    ) {
-        androidx.compose.foundation.layout.Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.spacing12),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = "🤖", style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.width(Dimens.spacing12))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(Dimens.spacing4))
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
     }
 }
