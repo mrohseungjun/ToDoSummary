@@ -30,6 +30,8 @@ interface StringResources {
     val todoPriority: String
     val todoDueDate: String
     val todoEmpty: String
+    val todoEmptyTitle: String
+    val todoEmptyBody: String
     val todoCompleted: String
     val todoIncomplete: String
     val todoCreatedAt: String
@@ -41,11 +43,13 @@ interface StringResources {
     val priorityMedium: String
     val priorityHigh: String
     
-    // AI 요약 관련
-    val aiSummaryTitle: String
-    val aiSummarize: String
-    val aiSummarizing: String
-    val aiSummaryResult: String
+    // 통계 관련
+    val statisticsTitle: String
+    val statisticsGenerate: String
+    val statisticsGenerating: String
+    val statisticsResult: String
+    val statisticsLoadingMessage: String
+    val statisticsLoadModel: String
     
     // 설정 관련
     val settingsTitle: String
@@ -82,6 +86,8 @@ class EnglishStringResources : StringResources {
     override val todoPriority: String = "Priority"
     override val todoDueDate: String = "Due Date"
     override val todoEmpty: String = "No todos yet. Add one by clicking the + button."
+    override val todoEmptyTitle: String = "All tasks completed!"
+    override val todoEmptyBody: String = "Add a new task to plan the rest of your day."
     override val todoCompleted: String = "Completed"
     override val todoIncomplete: String = "Incomplete"
     override val todoCreatedAt: String = "Created at"
@@ -93,11 +99,13 @@ class EnglishStringResources : StringResources {
     override val priorityMedium: String = "Medium"
     override val priorityHigh: String = "High"
     
-    // AI 요약 관련
-    override val aiSummaryTitle: String = "AI Summary"
-    override val aiSummarize: String = "Summarize"
-    override val aiSummarizing: String = "Summarizing..."
-    override val aiSummaryResult: String = "Summary Result"
+    // 통계 관련
+    override val statisticsTitle: String = "Statistics"
+    override val statisticsGenerate: String = "Generate"
+    override val statisticsGenerating: String = "Generating..."
+    override val statisticsResult: String = "Statistics Result"
+    override val statisticsLoadingMessage: String = "Loading statistics model..."
+    override val statisticsLoadModel: String = "Load statistics model"
     
     // 설정 관련
     override val settingsTitle: String = "Settings"
@@ -134,6 +142,8 @@ class KoreanStringResources : StringResources {
     override val todoPriority: String = "우선순위"
     override val todoDueDate: String = "마감일"
     override val todoEmpty: String = "아직 할 일이 없습니다. + 버튼을 클릭하여 추가하세요."
+    override val todoEmptyTitle: String = "오늘의 모든 할 일을 완료했어요! 🎉"
+    override val todoEmptyBody: String = "새로운 할 일을 추가하여 하루를 계획해보세요."
     override val todoCompleted: String = "완료됨"
     override val todoIncomplete: String = "미완료"
     override val todoCreatedAt: String = "생성 시간"
@@ -145,11 +155,13 @@ class KoreanStringResources : StringResources {
     override val priorityMedium: String = "중간"
     override val priorityHigh: String = "높음"
     
-    // AI 요약 관련
-    override val aiSummaryTitle: String = "AI 요약"
-    override val aiSummarize: String = "요약하기"
-    override val aiSummarizing: String = "요약 중..."
-    override val aiSummaryResult: String = "요약 결과"
+    // 통계 관련
+    override val statisticsTitle: String = "통계"
+    override val statisticsGenerate: String = "생성하기"
+    override val statisticsGenerating: String = "생성 중..."
+    override val statisticsResult: String = "통계 결과"
+    override val statisticsLoadingMessage: String = "통계 모델을 로드하는 중입니다..."
+    override val statisticsLoadModel: String = "통계 모델 로드하기"
     
     // 설정 관련
     override val settingsTitle: String = "설정"

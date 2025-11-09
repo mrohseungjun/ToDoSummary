@@ -10,7 +10,7 @@ kotlin {
 
             // Feature dependencies
             implementation(projects.feature.todo)
-            implementation(projects.feature.ai)
+            implementation(projects.feature.statistics)
             implementation(projects.feature.settings)
 
             // Compose runtime

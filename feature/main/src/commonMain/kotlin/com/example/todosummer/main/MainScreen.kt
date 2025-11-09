@@ -1,13 +1,15 @@
 package com.example.todosummer.main
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -23,9 +25,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.todosummer.core.common.localization.ProvideStringResources
 import com.example.todosummer.core.common.localization.getStringResources
@@ -33,17 +32,16 @@ import com.example.todosummer.core.common.localization.stringResource
 import com.example.todosummer.core.ui.theme.AppTheme
 import com.example.todosummer.core.ui.theme.Dimens
 import com.example.todosummer.core.ui.theme.ThemeMode
-import com.example.todosummer.feature.ai.presentation.SummaryScreen
-import com.example.todosummer.feature.ai.presentation.SummaryViewModel
+import com.example.todosummer.feature.statistics.presentation.StatisticsRoute
 import com.example.todosummer.feature.settings.SettingsScreen
 import com.example.todosummer.feature.todo.presentation.TodoListRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun MainScreen(
-    summaryViewModel: SummaryViewModel,
     appState: MainAppState,
     modifier: Modifier = Modifier,
 ) {
@@ -51,7 +49,7 @@ fun MainScreen(
     val currentTheme by appState.themeMode.collectAsState()
     val stringResources = getStringResources(currentLanguage)
 
-    var selectedTab by remember { mutableStateOf(MainTab.TODO) }
+    var selectedTab by remember { mutableStateOf(MainTab.HOME) }
 
     ProvideStringResources(stringResources) {
         AppTheme(themeMode = currentTheme) {
@@ -65,12 +63,14 @@ fun MainScreen(
             ) { paddingValues ->
                 Surface(modifier = modifier.fillMaxSize()) {
                     when (selectedTab) {
-                        MainTab.TODO -> TodoListRoute(
-                            onOpenAISummary = { selectedTab = MainTab.AI },
+                        MainTab.HOME -> TodoListRoute(
+                            onOpenStatistics = { selectedTab = MainTab.STATISTICS },
                             modifier = Modifier.padding(paddingValues)
                         )
-                        MainTab.AI -> SummaryScreen(
-                            viewModel = summaryViewModel,
+                        MainTab.CALENDAR -> {
+                            // TODO: Calendar Screen
+                        }
+                        MainTab.STATISTICS -> StatisticsRoute(
                             modifier = Modifier.padding(paddingValues)
                         )
                         MainTab.SETTINGS -> SettingsScreen(
@@ -87,6 +87,15 @@ fun MainScreen(
     }
 }
 
+@Preview
+@Composable
+fun MainScreenPreview() {
+    val appState = remember { MainAppState() }
+    MainScreen(
+        appState = appState,
+    )
+}
+
 @Composable
 private fun MainBottomBar(
     selectedTab: MainTab,
@@ -94,20 +103,16 @@ private fun MainBottomBar(
 ) {
     val strings = stringResource()
 
-    val shape = RoundedCornerShape(Dimens.radius12)
-    Surface(
+    NavigationBar(
         modifier = Modifier
             .navigationBarsPadding()
-            .padding(horizontal = Dimens.spacing16, vertical = Dimens.spacing8),
-        shape = shape,
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-        tonalElevation = Dimens.elevation2,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            ),
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 0.dp
     ) {
-        NavigationBar(
-            containerColor = Color.Transparent,
-            tonalElevation = 0.dp
-        ) {
         val itemColors = NavigationBarItemDefaults.colors(
             selectedIconColor = MaterialTheme.colorScheme.primary,
             selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -117,19 +122,28 @@ private fun MainBottomBar(
         )
 
         NavigationBarItem(
-            icon = { Icon(Icons.Default.CheckCircle, contentDescription = strings.todos) },
-            label = { Text(strings.todos) },
-            selected = selectedTab == MainTab.TODO,
-            onClick = { onTabSelected(MainTab.TODO) },
+            icon = { Icon(Icons.Default.Home, contentDescription = "홈") },
+            label = { Text("홈") },
+            selected = selectedTab == MainTab.HOME,
+            onClick = { onTabSelected(MainTab.HOME) },
             colors = itemColors,
             alwaysShowLabel = true
         )
 
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Star, contentDescription = strings.aiSummaryTitle) },
-            label = { Text(strings.aiSummaryTitle) },
-            selected = selectedTab == MainTab.AI,
-            onClick = { onTabSelected(MainTab.AI) },
+            icon = { Icon(Icons.Default.DateRange, contentDescription = "캘린더") },
+            label = { Text("캘린더") },
+            selected = selectedTab == MainTab.CALENDAR,
+            onClick = { onTabSelected(MainTab.CALENDAR) },
+            colors = itemColors,
+            alwaysShowLabel = true
+        )
+
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.BarChart, contentDescription = strings.statisticsTitle) },
+            label = { Text(strings.statisticsTitle) },
+            selected = selectedTab == MainTab.STATISTICS,
+            onClick = { onTabSelected(MainTab.STATISTICS) },
             colors = itemColors,
             alwaysShowLabel = true
         )
@@ -142,13 +156,31 @@ private fun MainBottomBar(
             colors = itemColors,
             alwaysShowLabel = true
         )
+    }
+}
+
+@Preview
+@Composable
+fun MainBottomBarPreview() {
+    var selectedTab by remember { mutableStateOf(MainTab.HOME) }
+    val stringResources = getStringResources(com.example.todosummer.core.common.localization.LanguageMode.ENGLISH)
+
+    ProvideStringResources(stringResources) {
+        AppTheme(themeMode = ThemeMode.LIGHT) {
+            Surface {
+                MainBottomBar(
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it }
+                )
+            }
         }
     }
 }
 
 enum class MainTab {
-    TODO,
-    AI,
+    HOME,
+    CALENDAR,
+    STATISTICS,
     SETTINGS
 }
 

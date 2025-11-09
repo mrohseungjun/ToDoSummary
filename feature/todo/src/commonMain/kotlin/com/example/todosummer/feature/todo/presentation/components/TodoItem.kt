@@ -67,12 +67,12 @@ fun TodoItem(
     val offsetX = remember { Animatable(0f) }
     
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = Dimens.spacing4)
-            ,
-        shape = RoundedCornerShape(Dimens.radius8),
-        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevation2)
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Dimens.radius12),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box {
             // 배경: 삭제 액션 영역 (오른쪽)
@@ -128,7 +128,7 @@ fun TodoItem(
                         )
                     }
                     .offset { IntOffset(offsetX.value.roundToInt(), 0) }
-                    .background(MaterialTheme.colorScheme.surface)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .padding(Dimens.spacing12),
                 verticalAlignment = Alignment.CenterVertically
             ) {
