@@ -8,13 +8,11 @@ import kotlinx.datetime.LocalDateTime
 data class Todo(
     val id: String,
     val title: String,
-    val description: String?,
     val isCompleted: Boolean,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime?,
-    val dueDate: LocalDateTime?,
     val priority: Priority,
-    val tags: List<String> = emptyList()
+    val category: String = "업무" // 기본 카테고리
 )
 
 enum class Priority {

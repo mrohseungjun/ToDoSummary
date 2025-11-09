@@ -8,22 +8,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,8 +39,6 @@ import com.example.todosummer.core.common.localization.stringResource
 import com.example.todosummer.core.domain.model.Priority
 import com.example.todosummer.core.domain.model.Todo
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
@@ -49,7 +49,9 @@ import kotlinx.datetime.toLocalDateTime
 @Composable
 fun TodoEditScreen(
     todo: Todo?,
+    categories: List<String>,
     onSave: (Todo) -> Unit,
+    onAddCategory: (String) -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -57,12 +59,11 @@ fun TodoEditScreen(
     val isEditing = todo != null
     
     var title by remember { mutableStateOf(todo?.title ?: "") }
-    var description by remember { mutableStateOf(todo?.description ?: "") }
     var priority by remember { mutableStateOf(todo?.priority ?: Priority.MEDIUM) }
-    var dueDate by remember { mutableStateOf(todo?.dueDate) }
+    var selectedCategory by remember { mutableStateOf(todo?.category ?: "업무") }
     
-    var showDatePicker by remember { mutableStateOf(false) }
-    var isDropdownExpanded by remember { mutableStateOf(false) }
+    var showAddCategoryDialog by remember { mutableStateOf(false) }
+    var newCategoryName by remember { mutableStateOf("") }
     
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
@@ -77,119 +78,98 @@ fun TodoEditScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 헤더 타이틀 (시트 상단)
+            // 헤더 타이틀
             Text(
-                text = if (isEditing) strings.editTodo else strings.addTodo,
+                text = if (isEditing) "할 일 수정하기" else "새로운 할 일",
                 style = MaterialTheme.typography.titleLarge
             )
-            // 제목 입력
+            
+            // 할 일 입력
+            Text(
+                text = "할 일",
+                style = MaterialTheme.typography.bodyLarge
+            )
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text(strings.todoTitle) },
+                placeholder = { Text("새로운 할 일 추가...") },
                 modifier = Modifier.fillMaxWidth()
             )
             
-            // 설명 입력
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text(strings.todoDescription) },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3
+            // 카테고리 선택
+            Text(
+                text = "카테고리",
+                style = MaterialTheme.typography.bodyLarge
             )
             
-            // 우선순위 선택
-            ExposedDropdownMenuBox(
-                expanded = isDropdownExpanded,
-                onExpandedChange = { isDropdownExpanded = it }
-            ) {
-                OutlinedTextField(
-                    value = when (priority) {
-                        Priority.LOW -> strings.priorityLow
-                        Priority.MEDIUM -> strings.priorityMedium
-                        Priority.HIGH -> strings.priorityHigh
-                    },
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text(strings.todoPriority) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
-                )
-                
-                ExposedDropdownMenu(
-                    expanded = isDropdownExpanded,
-                    onDismissRequest = { isDropdownExpanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(strings.priorityLow) },
-                        onClick = {
-                            priority = Priority.LOW
-                            isDropdownExpanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(strings.priorityMedium) },
-                        onClick = {
-                            priority = Priority.MEDIUM
-                            isDropdownExpanded = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(strings.priorityHigh) },
-                        onClick = {
-                            priority = Priority.HIGH
-                            isDropdownExpanded = false
-                        }
-                    )
-                }
-            }
-            
-            // 마감일 선택
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = strings.todoDueDate,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                
-                Spacer(modifier = Modifier.weight(1f))
-                
-                TextButton(onClick = { showDatePicker = true }) {
-                    Text(
-                        text = dueDate?.let { formatDate(it) } ?: "선택하세요"
+                categories.forEach { category ->
+                    FilterChip(
+                        selected = selectedCategory == category,
+                        onClick = { selectedCategory = category },
+                        label = { Text(category) }
                     )
                 }
-            }
-            
-            // 날짜 선택 다이얼로그
-            if (showDatePicker) {
-                val datePickerState = rememberDatePickerState()
                 
-                DatePickerDialog(
-                    onDismissRequest = { showDatePicker = false },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val instant = Instant.fromEpochMilliseconds(millis)
-                                dueDate = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-                            }
-                            showDatePicker = false
-                        }) {
-                            Text(strings.confirm)
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDatePicker = false }) {
-                            Text(strings.cancel)
+                // 추가 버튼
+                FilterChip(
+                    selected = false,
+                    onClick = { showAddCategoryDialog = true },
+                    label = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "카테고리 추가",
+                                modifier = Modifier.padding(end = 4.dp)
+                            )
+                            Text("추가")
                         }
                     }
+                )
+            }
+            
+            // 추가 옵션 (우선순위)
+            Text(
+                text = "추가 옵션",
+                style = MaterialTheme.typography.bodyLarge
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // 우선순위 아이콘 버튼들
+                IconButton(
+                    onClick = { priority = Priority.LOW },
+                    modifier = Modifier.weight(1f)
                 ) {
-                    DatePicker(state = datePickerState)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("📅", style = MaterialTheme.typography.headlineMedium)
+                        Text("낮음", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                
+                IconButton(
+                    onClick = { priority = Priority.MEDIUM },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("🔔", style = MaterialTheme.typography.headlineMedium)
+                        Text("보통", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                
+                IconButton(
+                    onClick = { priority = Priority.HIGH },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("🚩", style = MaterialTheme.typography.headlineMedium)
+                        Text("높음", style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
             
@@ -210,28 +190,57 @@ fun TodoEditScreen(
                         val newTodo = Todo(
                             id = todo?.id ?: "",
                             title = title,
-                            description = description,
                             isCompleted = todo?.isCompleted ?: false,
                             createdAt = todo?.createdAt ?: now,
                             updatedAt = if (isEditing) now else null,
-                            dueDate = dueDate,
                             priority = priority,
-                            tags = todo?.tags ?: emptyList()
+                            category = selectedCategory
                         )
                         onSave(newTodo)
                     },
                     enabled = title.isNotBlank()
                 ) {
-                    Text(strings.save)
+                    Text(if (isEditing) "저장" else "추가하기")
                 }
             }
         }
     }
-}
-
-/**
- * 날짜 포맷팅 함수
- */
-private fun formatDate(date: LocalDateTime): String {
-    return "${date.year}년 ${date.monthNumber}월 ${date.dayOfMonth}일"
+    
+    // 카테고리 추가 다이얼로그
+    if (showAddCategoryDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showAddCategoryDialog = false },
+            title = { Text("새 카테고리 추가") },
+            text = {
+                OutlinedTextField(
+                    value = newCategoryName,
+                    onValueChange = { newCategoryName = it },
+                    label = { Text("카테고리 이름") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newCategoryName.isNotBlank()) {
+                            onAddCategory(newCategoryName)
+                            selectedCategory = newCategoryName
+                            newCategoryName = ""
+                            showAddCategoryDialog = false
+                        }
+                    }
+                ) {
+                    Text("추가")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    newCategoryName = ""
+                    showAddCategoryDialog = false 
+                }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 }

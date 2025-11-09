@@ -9,9 +9,8 @@ sealed interface TodoIntent {
 
     data class Add(
         val title: String,
-        val description: String?,
         val priority: Priority,
-        val dueDate: LocalDateTime?
+        val category: String = "업무"
     ) : TodoIntent
 
     data class Update(val todo: Todo) : TodoIntent

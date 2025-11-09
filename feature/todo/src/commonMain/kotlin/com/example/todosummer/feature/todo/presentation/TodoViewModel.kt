@@ -1,7 +1,9 @@
 package com.example.todosummer.feature.todo.presentation
 
+import com.example.todosummer.core.domain.model.Category
 import com.example.todosummer.core.domain.model.Priority
 import com.example.todosummer.core.domain.model.Todo
+import com.example.todosummer.core.domain.repository.CategoryRepository
 import com.example.todosummer.core.domain.usecase.TodoUseCases
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,12 +16,14 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.random.Random
 
 /**
  * Todo 화면의 상태를 관리하는 ViewModel
  */
 class TodoViewModel(
-    private val useCases: TodoUseCases
+    private val useCases: TodoUseCases,
+    private val categoryRepository: CategoryRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow(TodoState())
     val state: StateFlow<TodoState> = _state.asStateFlow()
@@ -31,25 +35,30 @@ class TodoViewModel(
                 _state.update { it.copy(isLoading = false, todos = todos) }
             }
         }
+        
+        // 카테고리 Flow 수집
+        viewModelScope.launch {
+            categoryRepository.getAllCategories().collect { categories ->
+                _state.update { it.copy(categories = categories) }
+            }
+        }
     }
     
     /**
      * 새로운 Todo 항목을 추가합니다.
      */
-    fun addTodo(title: String, description: String?, priority: Priority, dueDate: LocalDateTime? = null) {
+    fun addTodo(title: String, priority: Priority, category: String = "업무") {
         if (title.isBlank()) return
         
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
         val todo = Todo(
             id = "",
             title = title,
-            description = description,
             isCompleted = false,
             createdAt = now,
             updatedAt = null,
-            dueDate = dueDate,
             priority = priority,
-            tags = emptyList()
+            category = category
         )
         
         viewModelScope.launch {
@@ -100,15 +109,35 @@ class TodoViewModel(
     }
 
     /**
+     * 새 카테고리를 추가합니다
+     */
+    fun addCategory(name: String) {
+        if (name.isBlank()) return
+        
+        viewModelScope.launch {
+            try {
+                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val category = Category(
+                    id = "category_${Random.nextLong()}",
+                    name = name,
+                    createdAt = now
+                )
+                categoryRepository.addCategory(category)
+            } catch (e: Exception) {
+                _state.update { it.copy(error = "카테고리 추가 중 오류가 발생했습니다: ${e.message}") }
+            }
+        }
+    }
+
+    /**
      * 인텐트 기반 액션 처리
      */
     fun onIntent(intent: TodoIntent) {
         when (intent) {
             is TodoIntent.Add -> addTodo(
                 title = intent.title,
-                description = intent.description,
                 priority = intent.priority,
-                dueDate = intent.dueDate
+                category = intent.category
             )
             is TodoIntent.Update -> updateTodo(intent.todo)
             is TodoIntent.Delete -> deleteTodo(intent.id)

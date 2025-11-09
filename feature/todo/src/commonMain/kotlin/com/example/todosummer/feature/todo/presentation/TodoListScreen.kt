@@ -151,18 +151,21 @@ fun TodoListScreen(
     if (showAddEditDialog) {
         TodoEditScreen(
             todo = currentTodo,
+            categories = state.categories.map { it.name },
             onSave = { todo ->
                 if (currentTodo == null) {
                     viewModel.addTodo(
                         title = todo.title,
-                        description = todo.description,
                         priority = todo.priority,
-                        dueDate = todo.dueDate
+                        category = todo.category
                     )
                 } else {
                     viewModel.updateTodo(todo)
                 }
                 showAddEditDialog = false
+            },
+            onAddCategory = { categoryName ->
+                viewModel.addCategory(categoryName)
             },
             onCancel = { showAddEditDialog = false }
         )
@@ -231,9 +234,9 @@ fun TodoList(
 @Composable
 fun TodoListPreview() {
     val todos = listOf(
-        Todo(id = "1", title = "Buy groceries", description = null, isCompleted = false, createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), updatedAt = null, dueDate = null, priority = Priority.MEDIUM),
-        Todo(id = "2", title = "Walk the dog", description = "Morning walk", isCompleted = true, createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), updatedAt = null, dueDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), priority = Priority.LOW),
-        Todo(id = "3", title = "Read a book", description = "Chapter 5", isCompleted = false, createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), updatedAt = null, dueDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), priority = Priority.HIGH)
+        Todo(id = "1", title = "프로젝트 기획서 작성", isCompleted = false, createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), updatedAt = null, priority = Priority.HIGH, category = "업무"),
+        Todo(id = "2", title = "운동하기", isCompleted = true, createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), updatedAt = null, priority = Priority.MEDIUM, category = "운동"),
+        Todo(id = "3", title = "책 읽기", isCompleted = false, createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), updatedAt = null, priority = Priority.LOW, category = "개인")
     )
     TodoList(
         todos = todos,

@@ -161,23 +161,12 @@ fun TodoItem(
 
                     Spacer(modifier = Modifier.height(Dimens.spacing4))
 
+                    // 카테고리 표시
                     Text(
-                        text = todo.description ?: "",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        text = todo.category,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
-
-                    // 마감일이 있는 경우 표시
-                    todo.dueDate?.let { dueDate ->
-                        Spacer(modifier = Modifier.height(Dimens.spacing4))
-                        Text(
-                            text = "${strings.todoDueDate}: ${formatDate(dueDate)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                    }
                 }
             }
         }
@@ -203,9 +192,3 @@ fun PriorityIndicator(priority: Priority) {
     )
 }
 
-/**
- * 날짜 포맷팅 함수
- */
-private fun formatDate(date: LocalDateTime): String {
-    return "${date.year}년 ${date.monthNumber}월 ${date.dayOfMonth}일"
-}

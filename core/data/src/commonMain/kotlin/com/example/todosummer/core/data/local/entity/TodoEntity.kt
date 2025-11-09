@@ -15,12 +15,11 @@ data class TodoEntity(
     @PrimaryKey
     val id: String,
     val title: String,
-    val description: String?,
     val isCompleted: Boolean,
     val priority: String, // Priority enum을 String으로 저장
     val createdAt: String, // LocalDateTime을 ISO String으로 저장
-    val updatedAt: String,
-    val dueDate: String? // nullable LocalDateTime을 ISO String으로 저장
+    val updatedAt: String?,
+    val category: String // 카테고리
 )
 
 /**
@@ -29,12 +28,11 @@ data class TodoEntity(
 fun TodoEntity.toDomain(): Todo = Todo(
     id = id,
     title = title,
-    description = description,
     isCompleted = isCompleted,
     priority = Priority.valueOf(priority),
     createdAt = LocalDateTime.parse(createdAt),
-    updatedAt = LocalDateTime.parse(updatedAt),
-    dueDate = dueDate?.let { LocalDateTime.parse(it) }
+    updatedAt = updatedAt?.let { LocalDateTime.parse(it) },
+    category = category
 )
 
 /**
@@ -43,10 +41,9 @@ fun TodoEntity.toDomain(): Todo = Todo(
 fun Todo.toEntity(): TodoEntity = TodoEntity(
     id = id,
     title = title,
-    description = description,
     isCompleted = isCompleted,
     priority = priority.name,
     createdAt = createdAt.toString(),
-    updatedAt = updatedAt.toString(),
-    dueDate = dueDate?.toString()
+    updatedAt = updatedAt?.toString(),
+    category = category
 )
