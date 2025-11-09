@@ -2,7 +2,6 @@ package com.example.todosummer.core.data.local.database
 
 import androidx.room.ConstructedBy
 import androidx.room.Database
-import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 import androidx.room.migration.Migration
@@ -15,6 +14,9 @@ import com.example.todosummer.core.data.local.entity.TodoEntity
 import com.example.todosummer.core.data.local.entity.CategoryEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * Todo 앱의 Room 데이터베이스
@@ -83,8 +85,8 @@ abstract class TodoDatabase : RoomDatabase() {
                 """.trimIndent())
                 
                 // 2. 기본 카테고리 삽입
-                val now = kotlinx.datetime.Clock.System.now()
-                    .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault())
+                val now = Clock.System.now()
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
                     .toString()
                 
                 connection.execSQL("""

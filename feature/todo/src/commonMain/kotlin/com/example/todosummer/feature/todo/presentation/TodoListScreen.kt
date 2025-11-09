@@ -349,15 +349,12 @@ private fun TodoCard(
                     else
                         TextDecoration.None
                 )
-                todo.dueDate?.let { dueDate ->
-                    Spacer(modifier = Modifier.height(Dimens.spacing4))
-                    Text(
-                        text = "${dueDate.hour}:${dueDate.minute.toString().padStart(2, '0')} ${if (dueDate.hour < 12) "AM" else "PM"}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 12.sp
-                    )
-                }
+                Spacer(modifier = Modifier.height(Dimens.spacing4))
+                Text(
+                    text = todo.category,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
         IconButton(onClick = { onEdit(todo) }) {
@@ -373,7 +370,15 @@ private fun TodoCard(
 @Preview
 @Composable
 fun TodoCardPreview() {
-    val todo = Todo(id = "1", title = "Sample Todo", description = "This is a sample todo item.", isCompleted = false, createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), updatedAt = null, dueDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), priority = Priority.MEDIUM)
+    val todo = Todo(
+        id = "1", 
+        title = "프로젝트 기획서 작성", 
+        isCompleted = false, 
+        createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), 
+        updatedAt = null, 
+        priority = Priority.HIGH,
+        category = "업무"
+    )
     TodoCard(
         todo = todo,
         onToggleCompletion = {},

@@ -51,22 +51,19 @@ class RoomTodoDataSource(
 private fun LocalTodoEntity.toDataModel(): DataTodoEntity = DataTodoEntity(
     id = id,
     title = title,
-    description = description,
     isCompleted = isCompleted,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    dueDate = dueDate,
     priority = priority,
-    tags = emptyList() // 로컬 스키마에는 태그 컬럼 없음
+    category = category
 )
 
 private fun DataTodoEntity.toLocalEntity(): LocalTodoEntity = LocalTodoEntity(
     id = id,
     title = title,
-    description = description,
     isCompleted = isCompleted,
     priority = priority,
     createdAt = createdAt,
     updatedAt = updatedAt ?: createdAt,
-    dueDate = dueDate
+    category = category
 )

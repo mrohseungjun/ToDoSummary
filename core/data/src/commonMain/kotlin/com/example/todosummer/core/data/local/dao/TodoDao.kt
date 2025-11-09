@@ -49,7 +49,7 @@ interface TodoDao {
     /**
      * Todo 제목으로 검색
      */
-    @Query("SELECT * FROM todos WHERE title LIKE '%' || :query || '%' OR description LIKE '%' || :query || '%' ORDER BY createdAt DESC")
+    @Query("SELECT * FROM todos WHERE title LIKE '%' || :query || '%' ORDER BY createdAt DESC")
     fun searchTodos(query: String): Flow<List<TodoEntity>>
     
     /**
