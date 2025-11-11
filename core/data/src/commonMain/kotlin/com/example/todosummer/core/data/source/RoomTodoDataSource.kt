@@ -48,12 +48,14 @@ class RoomTodoDataSource(
     }
 }
 
+// core/data/.../RoomTodoDataSource.kt
 private fun LocalTodoEntity.toDataModel(): DataTodoEntity = DataTodoEntity(
     id = id,
     title = title,
     isCompleted = isCompleted,
     createdAt = createdAt,
     updatedAt = updatedAt,
+    dueDate = dueDate,          // ✅ 추가
     priority = priority,
     category = category
 )
@@ -65,5 +67,6 @@ private fun DataTodoEntity.toLocalEntity(): LocalTodoEntity = LocalTodoEntity(
     priority = priority,
     createdAt = createdAt,
     updatedAt = updatedAt ?: createdAt,
+    dueDate = dueDate,
     category = category
 )

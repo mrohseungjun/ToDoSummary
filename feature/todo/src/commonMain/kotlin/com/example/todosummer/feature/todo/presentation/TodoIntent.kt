@@ -1,7 +1,9 @@
 package com.example.todosummer.feature.todo.presentation
 
+import com.example.todosummer.core.domain.model.Category
 import com.example.todosummer.core.domain.model.Priority
 import com.example.todosummer.core.domain.model.Todo
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 
 sealed interface TodoIntent {
@@ -16,4 +18,13 @@ sealed interface TodoIntent {
     data class Update(val todo: Todo) : TodoIntent
     data class Delete(val id: String) : TodoIntent
     data class Toggle(val id: String) : TodoIntent
+    
+    // 카테고리 관리
+    data class AddCategory(val name: String) : TodoIntent
+    data class DeleteCategory(val category: Category) : TodoIntent
+    
+    // 날짜 네비게이션
+    data class SelectDate(val date: LocalDate?) : TodoIntent
+    data object NavigateToPreviousDate : TodoIntent
+    data object NavigateToNextDate : TodoIntent
 }

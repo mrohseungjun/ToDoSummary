@@ -1,6 +1,5 @@
 package com.example.todosummer.main
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -30,7 +29,6 @@ import com.example.todosummer.core.common.localization.ProvideStringResources
 import com.example.todosummer.core.common.localization.getStringResources
 import com.example.todosummer.core.common.localization.stringResource
 import com.example.todosummer.core.ui.theme.AppTheme
-import com.example.todosummer.core.ui.theme.Dimens
 import com.example.todosummer.core.ui.theme.ThemeMode
 import com.example.todosummer.feature.statistics.presentation.StatisticsRoute
 import com.example.todosummer.feature.settings.SettingsScreen

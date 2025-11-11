@@ -25,7 +25,7 @@ import kotlinx.datetime.toLocalDateTime
 @ConstructedBy(TodoDatabaseConstructor::class) // Non-Android 타겟에서 필요
 @Database(
     entities = [TodoEntity::class, CategoryEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class TodoDatabase : RoomDatabase() {
@@ -98,6 +98,19 @@ abstract class TodoDatabase : RoomDatabase() {
                 """.trimIndent())
             }
         }
+        
+        /**
+         * 버전 3 -> 4 마이그레이션
+         * todos 테이블에 dueDate 컬럼 추가
+         */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(connection: SQLiteConnection) {
+                // dueDate 컬럼 추가 (NULL 허용)
+                connection.execSQL("""
+                    ALTER TABLE todos ADD COLUMN dueDate TEXT
+                """.trimIndent())
+            }
+        }
     }
 }
 
@@ -120,9 +133,8 @@ fun createTodoDatabase(): TodoDatabase {
     return getDatabaseBuilder()
         .addMigrations(
             TodoDatabase.MIGRATION_1_2,
-            TodoDatabase.MIGRATION_2_3
+            TodoDatabase.MIGRATION_2_3,
+            TodoDatabase.MIGRATION_3_4
         )
-        .setDriver(BundledSQLiteDriver())
-        .setQueryCoroutineContext(Dispatchers.IO)
         .build()
 }

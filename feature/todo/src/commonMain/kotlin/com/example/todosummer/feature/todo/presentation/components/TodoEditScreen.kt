@@ -1,8 +1,10 @@
 package com.example.todosummer.feature.todo.presentation.components
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +26,8 @@ import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.PriorityHigh
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -44,13 +48,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.todosummer.core.common.localization.stringResource
 import com.example.todosummer.core.domain.model.Priority
@@ -59,35 +63,42 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
+import org.koin.core.logger.Logger
 
 /**
  * Todo 항목을 추가하거나 편집하는 화면
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TodoEditScreen(
     todo: Todo?,
     categories: List<String>,
     onSave: (Todo) -> Unit,
     onAddCategory: (String) -> Unit,
+    onDeleteCategory: (String) -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val strings = stringResource()
     val isEditing = todo != null
     
-    var title by remember { mutableStateOf(todo?.title ?: "") }
-    var priority by remember { mutableStateOf(todo?.priority ?: Priority.MEDIUM) }
-    var selectedCategory by remember { mutableStateOf(todo?.category ?: "업무") }
+    var title by remember(todo) { mutableStateOf(todo?.title ?: "") }
+    var priority by remember(todo) { mutableStateOf(todo?.priority ?: Priority.MEDIUM) }
+    var selectedCategory by remember(todo) { mutableStateOf(todo?.category ?: "업무") }
     
     // 추가 옵션 상태
-    var dueDate by remember { mutableStateOf<LocalDateTime?>(null) }
+    var dueDate by remember(todo) { mutableStateOf<LocalDateTime?>(todo?.dueDate) }
+    LaunchedEffect(todo?.id) {
+        println("[TodoEdit] Loaded todo id=${todo?.id} dueDate=${dueDate}")
+    }
     var hasReminder by remember { mutableStateOf(false) }
     var reminderTime by remember { mutableStateOf("마감 10분 전") }
     var repeatOption by remember { mutableStateOf("안 함") }
     
     var showAddCategoryDialog by remember { mutableStateOf(false) }
+    var showDeleteCategoryDialog by remember { mutableStateOf(false) }
+    var categoryToDelete by remember { mutableStateOf<String?>(null) }
     var showAdvancedOptions by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var newCategoryName by remember { mutableStateOf("") }
@@ -131,15 +142,32 @@ fun TodoEditScreen(
             
             // 카테고리 선택
             SectionTitle(title = "카테고리")
+            
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 categories.forEach { category ->
                     FilterChip(
                         selected = selectedCategory == category,
                         onClick = { selectedCategory = category },
                         label = { Text(category) },
+                        trailingIcon = if (selectedCategory == category) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "삭제",
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clickable {
+                                            categoryToDelete = category
+                                            showDeleteCategoryDialog = true
+                                        },
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
+                        } else null,
                         shape = RoundedCornerShape(20.dp)
                     )
                 }
@@ -204,9 +232,11 @@ fun TodoEditScreen(
                         isCompleted = todo?.isCompleted ?: false,
                         createdAt = todo?.createdAt ?: now,
                         updatedAt = if (isEditing) now else null,
+                        dueDate = dueDate,
                         priority = priority,
                         category = selectedCategory
                     )
+                    println("[TodoEdit] Saving todo id=${newTodo.id.ifEmpty { "<new>" }} dueDate=${newTodo.dueDate}")
                     onSave(newTodo)
                 },
                 enabled = title.isNotBlank(),
@@ -262,6 +292,53 @@ fun TodoEditScreen(
                 }
             },
             shape = RoundedCornerShape(20.dp)
+        )
+    }
+    
+    // 카테고리 삭제 확인 다이얼로그
+    if (showDeleteCategoryDialog && categoryToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { 
+                showDeleteCategoryDialog = false
+                categoryToDelete = null
+            },
+            title = { 
+                Text(
+                    text = "카테고리를 삭제하시겠습니까?",
+                    style = MaterialTheme.typography.titleLarge
+                ) 
+            },
+            text = { 
+                Text(
+                    text = "'$categoryToDelete' 카테고리가 삭제됩니다.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ) 
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        categoryToDelete?.let { onDeleteCategory(it) }
+                        showDeleteCategoryDialog = false
+                        categoryToDelete = null
+                    }
+                ) {
+                    Text(
+                        text = "삭제",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showDeleteCategoryDialog = false
+                    categoryToDelete = null
+                }) {
+                    Text("취소")
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
     
@@ -333,7 +410,7 @@ private fun AdvancedOptionsDialog(
             OptionItem(
                 icon = Icons.Default.CalendarToday,
                 title = "마감일",
-                subtitle = dueDate?.let { formatDate(it) } ?: "2025년 10월 27일, 오후 3:00",
+                subtitle = dueDate?.let { formatDate(it) } ?: "설정 안 함",
                 onClick = { showDatePicker = true }
             )
             
@@ -413,16 +490,6 @@ private fun AdvancedOptionsDialog(
                 }
             }
             
-            // 반복
-            OptionItem(
-                icon = Icons.Default.Repeat,
-                title = "반복",
-                subtitle = repeatOption,
-                onClick = { /* 반복 옵션 선택 */ }
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
             // 설정 완료 버튼
             Button(
                 onClick = onConfirm,
@@ -443,7 +510,15 @@ private fun AdvancedOptionsDialog(
     
     // 날짜 선택 다이얼로그
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState()
+        // 현재 마감일이 있으면 그 날짜로, 없으면 오늘 날짜로 초기화
+        val initialMillis = dueDate?.let { date ->
+            val instant = date.toInstant(TimeZone.currentSystemDefault())
+            instant.toEpochMilliseconds()
+        } ?: Clock.System.now().toEpochMilliseconds()
+        
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = initialMillis
+        )
         
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -451,7 +526,12 @@ private fun AdvancedOptionsDialog(
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
                         val instant = Instant.fromEpochMilliseconds(millis)
-                        onDueDateChange(instant.toLocalDateTime(TimeZone.currentSystemDefault()))
+                        val selectedDate = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+                        // 시간은 현재 시간으로 설정 (날짜만 변경)
+                        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                        val finalDueDate = kotlinx.datetime.LocalDateTime(selectedDate.date, now.time)
+                        println("[TodoEdit] Due date selected=$finalDueDate")
+                        onDueDateChange(finalDueDate)
                     }
                     showDatePicker = false
                 }) {
@@ -536,5 +616,8 @@ private fun Priority.toDisplayString(): String {
 }
 
 private fun formatDate(date: LocalDateTime): String {
-    return "${date.year}년 ${date.monthNumber}월 ${date.dayOfMonth}일"
+    val hour = if (date.hour == 0) 12 else if (date.hour > 12) date.hour - 12 else date.hour
+    val amPm = if (date.hour < 12) "오전" else "오후"
+    val minute = date.minute.toString().padStart(2, '0')
+    return "${date.year}년 ${date.monthNumber}월 ${date.dayOfMonth}일, $amPm $hour:$minute"
 }

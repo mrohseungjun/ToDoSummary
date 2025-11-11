@@ -9,8 +9,9 @@ data class Todo(
     val id: String,
     val title: String,
     val isCompleted: Boolean,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime?,
+    val createdAt: LocalDateTime,  // 생성 일시
+    val updatedAt: LocalDateTime?,  // 수정 일시
+    val dueDate: LocalDateTime?,  // 마감 일시 (선택사항)
     val priority: Priority,
     val category: String = "업무" // 기본 카테고리
 )

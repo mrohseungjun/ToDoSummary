@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.random.Random
@@ -50,12 +52,20 @@ class TodoViewModel(
         if (title.isBlank()) return
         
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        
+        // 선택된 날짜가 있으면 그 날짜로 생성, 없으면 오늘
+        val createdAt = _state.value.selectedDate?.let { selectedDate ->
+            // 선택된 날짜 + 현재 시간
+            LocalDateTime(selectedDate, now.time)
+        } ?: now
+
         val todo = Todo(
             id = "",
             title = title,
             isCompleted = false,
-            createdAt = now,
+            createdAt = createdAt,
             updatedAt = null,
+            dueDate = null,
             priority = priority,
             category = category
         )
@@ -127,6 +137,42 @@ class TodoViewModel(
             }
         }
     }
+    
+    /**
+     * 카테고리를 삭제합니다
+     */
+    fun deleteCategory(category: Category) {
+        viewModelScope.launch {
+            try {
+                categoryRepository.deleteCategory(category)
+            } catch (e: Exception) {
+                _state.update { it.copy(error = "카테고리 삭제 중 오류가 발생했습니다: ${e.message}") }
+            }
+        }
+    }
+    
+    /**
+     * 날짜를 선택합니다
+     */
+    fun selectDate(date: LocalDate?) {
+        _state.update { it.copy(selectedDate = date) }
+    }
+    
+    /**
+     * 이전 날짜로 이동
+     */
+    fun navigateToPreviousDate() {
+        val currentDate = _state.value.selectedDate ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        _state.update { it.copy(selectedDate = LocalDate(currentDate.year, currentDate.monthNumber, currentDate.dayOfMonth - 1)) }
+    }
+    
+    /**
+     * 다음 날짜로 이동
+     */
+    fun navigateToNextDate() {
+        val currentDate = _state.value.selectedDate ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        _state.update { it.copy(selectedDate = LocalDate(currentDate.year, currentDate.monthNumber, currentDate.dayOfMonth + 1)) }
+    }
 
     /**
      * 인텐트 기반 액션 처리
@@ -141,6 +187,11 @@ class TodoViewModel(
             is TodoIntent.Update -> updateTodo(intent.todo)
             is TodoIntent.Delete -> deleteTodo(intent.id)
             is TodoIntent.Toggle -> toggleTodoCompletion(intent.id)
+            is TodoIntent.AddCategory -> addCategory(intent.name)
+            is TodoIntent.DeleteCategory -> deleteCategory(intent.category)
+            is TodoIntent.SelectDate -> selectDate(intent.date)
+            TodoIntent.NavigateToPreviousDate -> navigateToPreviousDate()
+            TodoIntent.NavigateToNextDate -> navigateToNextDate()
             TodoIntent.Load -> { /* 초기 수집으로 대체됨 */ }
         }
     }

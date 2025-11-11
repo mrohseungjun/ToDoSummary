@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -42,7 +43,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.todosummer.core.common.localization.stringResource
 import com.example.todosummer.core.domain.model.Todo
 import com.example.todosummer.core.ui.AppIcons
@@ -51,7 +51,6 @@ import com.example.todosummer.core.ui.theme.Dimens
 import com.example.todosummer.feature.todo.presentation.components.TodoEditScreen
 import com.example.todosummer.core.domain.model.Priority
 import com.example.todosummer.feature.todo.presentation.components.TodoItem
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -70,12 +69,6 @@ fun TodoListRoute(
     TodoListScreen(viewModel = viewModel, onOpenStatistics = onOpenStatistics, modifier = modifier)
 }
 
-@Preview
-@Composable
-fun TodoListRoutePreview() {
-    TodoListRoute(onOpenStatistics = {})
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodoListScreen(
@@ -90,6 +83,36 @@ fun TodoListScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var currentTodo by remember { mutableStateOf<Todo?>(null) }
     val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) }
+    
+    // 선택된 날짜 (null이면 오늘)
+    val selectedDate = state.selectedDate ?: today.date
+    
+    // 날짜별 필터링된 Todo 목록 (마감일 고려)
+    val filteredTodos = remember(state.todos, selectedDate, today.date) {
+        state.todos.filter { todo ->
+            val todoDate = todo.createdAt.date
+            val todoDueDate = todo.dueDate?.date
+            val isToday = selectedDate == today.date
+            val isPast = selectedDate < today.date
+            
+            when {
+                // 오늘: 오늘까지 생성된 Todo + 오늘이 마감일인 Todo
+                isToday -> {
+                    todoDate <= selectedDate || todoDueDate == selectedDate
+                }
+                
+                // 과거: 해당 날짜에 생성된 미완료 Todo
+                isPast -> {
+                    todoDate == selectedDate && !todo.isCompleted
+                }
+                
+                // 미래: 해당 날짜에 생성되거나 마감일인 Todo
+                else -> {
+                    todoDate == selectedDate || todoDueDate == selectedDate
+                }
+            }
+        }
+    }
 
     Box(
         modifier = modifier
@@ -99,9 +122,9 @@ fun TodoListScreen(
         Column(modifier = Modifier.fillMaxSize()) {
             // 상단 날짜 네비게이션 바
             DateNavigationBar(
-                dateText = "${today.monthNumber}월 ${today.dayOfMonth}일 ${getDayOfWeekKorean(today.dayOfWeek.name)}",
-                onPreviousDay = { /* TODO */ },
-                onNextDay = { /* TODO */ }
+                dateText = "${selectedDate.monthNumber}월 ${selectedDate.dayOfMonth}일",
+                onPreviousDay = { viewModel.onIntent(TodoIntent.NavigateToPreviousDate) },
+                onNextDay = { viewModel.onIntent(TodoIntent.NavigateToNextDate) }
             )
 
             if (state.isLoading) {
@@ -109,15 +132,15 @@ fun TodoListScreen(
                     CircularProgressIndicator()
                 }
             } else {
-                if (state.todos.isEmpty()) {
+                if (filteredTodos.isEmpty()) {
                     EmptyState(
-                        messageTitle = strings.todoEmptyTitle,
-                        messageBody = strings.todoEmptyBody
+                        messageTitle = "할 일이 없습니다",
+                        messageBody = "새로운 할 일을 추가해보세요"
                     )
                 } else {
                     TodoList(
-                        todos = state.todos,
-                        onToggleCompletion = { viewModel.toggleTodoCompletion(it.id) },
+                        todos = filteredTodos,
+                        onToggleCompletion = { viewModel.onIntent(TodoIntent.Toggle(it.id)) },
                         onEdit = {
                             currentTodo = it
                             showAddEditDialog = true
@@ -154,18 +177,25 @@ fun TodoListScreen(
             categories = state.categories.map { it.name },
             onSave = { todo ->
                 if (currentTodo == null) {
-                    viewModel.addTodo(
-                        title = todo.title,
-                        priority = todo.priority,
-                        category = todo.category
+                    viewModel.onIntent(
+                        TodoIntent.Add(
+                            title = todo.title,
+                            priority = todo.priority,
+                            category = todo.category
+                        )
                     )
                 } else {
-                    viewModel.updateTodo(todo)
+                    viewModel.onIntent(TodoIntent.Update(todo))
                 }
                 showAddEditDialog = false
             },
             onAddCategory = { categoryName ->
-                viewModel.addCategory(categoryName)
+                viewModel.onIntent(TodoIntent.AddCategory(categoryName))
+            },
+            onDeleteCategory = { categoryName ->
+                state.categories.find { it.name == categoryName }?.let { category ->
+                    viewModel.onIntent(TodoIntent.DeleteCategory(category))
+                }
             },
             onCancel = { showAddEditDialog = false }
         )
@@ -175,23 +205,39 @@ fun TodoListScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text(strings.deleteTodo) },
-            text = { Text("${strings.deleteTodo}: ${currentTodo?.title}") },
+            title = { 
+                Text(
+                    text = "정말로 삭제하시겠습니까?",
+                    style = MaterialTheme.typography.titleLarge
+                ) 
+            },
+            text = { 
+                Text(
+                    text = "이 작업은 되돌릴 수 없습니다.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ) 
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        currentTodo?.let { viewModel.deleteTodo(it.id) }
+                        currentTodo?.let { viewModel.onIntent(TodoIntent.Delete(it.id)) }
                         showDeleteDialog = false
                     }
                 ) {
-                    Text(strings.delete)
+                    Text(
+                        text = "삭제",
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(strings.cancel)
+                    Text("취소")
                 }
-            }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 }
@@ -234,9 +280,9 @@ fun TodoList(
 @Composable
 fun TodoListPreview() {
     val todos = listOf(
-        Todo(id = "1", title = "프로젝트 기획서 작성", isCompleted = false, createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), updatedAt = null, priority = Priority.HIGH, category = "업무"),
-        Todo(id = "2", title = "운동하기", isCompleted = true, createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), updatedAt = null, priority = Priority.MEDIUM, category = "운동"),
-        Todo(id = "3", title = "책 읽기", isCompleted = false, createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), updatedAt = null, priority = Priority.LOW, category = "개인")
+        Todo(id = "1", title = "프로젝트 기획서 작성", isCompleted = false, createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), updatedAt = null, dueDate = null, priority = Priority.HIGH, category = "업무"),
+        Todo(id = "2", title = "운동하기", isCompleted = true, createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), updatedAt = null, dueDate = null, priority = Priority.MEDIUM, category = "운동"),
+        Todo(id = "3", title = "책 읽기", isCompleted = false, createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), updatedAt = null, dueDate = null, priority = Priority.LOW, category = "개인")
     )
     TodoList(
         todos = todos,
@@ -374,8 +420,9 @@ fun TodoCardPreview() {
         id = "1", 
         title = "프로젝트 기획서 작성", 
         isCompleted = false, 
-        createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()), 
-        updatedAt = null, 
+        createdAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+        updatedAt = null,
+        dueDate = null,
         priority = Priority.HIGH,
         category = "업무"
     )
@@ -431,4 +478,10 @@ fun EmptyStatePreview() {
         messageTitle = "No Todos",
         messageBody = "You have no tasks for today. Add one!"
     )
+}
+
+@Preview
+@Composable
+fun TodoListRoutePreview() {
+    TodoListRoute(onOpenStatistics = {})
 }
