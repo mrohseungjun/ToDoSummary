@@ -30,6 +30,7 @@ import com.example.todosummer.core.common.localization.getStringResources
 import com.example.todosummer.core.common.localization.stringResource
 import com.example.todosummer.core.ui.theme.AppTheme
 import com.example.todosummer.core.ui.theme.ThemeMode
+import com.example.todosummer.feature.calendar.presentation.CalendarRoute
 import com.example.todosummer.feature.statistics.presentation.StatisticsRoute
 import com.example.todosummer.feature.settings.SettingsScreen
 import com.example.todosummer.feature.todo.presentation.TodoListRoute
@@ -65,9 +66,13 @@ fun MainScreen(
                             onOpenStatistics = { selectedTab = MainTab.STATISTICS },
                             modifier = Modifier.padding(paddingValues)
                         )
-                        MainTab.CALENDAR -> {
-                            // TODO: Calendar Screen
-                        }
+                        MainTab.CALENDAR -> CalendarRoute(
+                            onAddTodoForDate = { date ->
+                                // 선택된 날짜로 이동하고 Todo 추가 화면 열기
+                                selectedTab = MainTab.HOME
+                            },
+                            modifier = Modifier.padding(paddingValues)
+                        )
                         MainTab.STATISTICS -> StatisticsRoute(
                             modifier = Modifier.padding(paddingValues)
                         )

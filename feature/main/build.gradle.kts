@@ -10,6 +10,7 @@ kotlin {
 
             // Feature dependencies
             implementation(projects.feature.todo)
+            implementation(projects.feature.calendar)
             implementation(projects.feature.statistics)
             implementation(projects.feature.settings)
 

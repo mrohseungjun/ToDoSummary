@@ -4,6 +4,7 @@ import com.example.todosummer.core.data.di.dataModule
 import com.example.todosummer.core.domain.di.DomainDI
 import com.example.todosummer.core.domain.repository.TodoRepository
 import com.example.todosummer.core.domain.usecase.TodoUseCases
+import com.example.todosummer.feature.calendar.di.calendarModule
 import com.example.todosummer.feature.statistics.di.statisticsModule
 import com.example.todosummer.feature.todo.di.todoPresentationModule
 import org.koin.core.module.Module
@@ -22,5 +23,6 @@ fun appModules() = listOf(
     dataModule, // Repository, DB, DataSource 등
     appDomainModule, // UseCases
     todoPresentationModule, // Todo Feature ViewModel
+    calendarModule, // Calendar Feature ViewModel
     statisticsModule // Statistics Feature ViewModel
 )

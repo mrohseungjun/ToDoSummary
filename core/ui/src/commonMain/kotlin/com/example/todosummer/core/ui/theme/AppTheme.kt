@@ -70,6 +70,27 @@ private val DarkColorScheme = darkColorScheme(
 // 현재 테마 모드를 저장하는 CompositionLocal
 val LocalThemeMode = compositionLocalOf { ThemeMode.SYSTEM }
 
+// Todo 카드 색상을 위한 확장 ColorScheme
+data class TodoColors(
+    val cardBackground: Color,
+    val cardBackgroundCompleted: Color,
+    val onCardBackground: Color,
+    val onCardBackgroundCompleted: Color,
+    val accent: Color,
+    val onAccent: Color = Color.White
+)
+
+// Todo 색상 CompositionLocal (Material 3 패턴 준수)
+val LocalTodoColors = compositionLocalOf {
+    TodoColors(
+        cardBackground = md_theme_light_todoCard,
+        cardBackgroundCompleted = md_theme_light_todoCardCompleted,
+        onCardBackground = md_theme_light_onTodoCard,
+        onCardBackgroundCompleted = md_theme_light_onTodoCardCompleted,
+        accent = md_theme_light_todoAccent
+    )
+}
+
 /**
  * 앱 테마를 제공하는 Composable
  */
@@ -80,13 +101,36 @@ fun AppTheme(
 ) {
     val systemInDarkTheme = isSystemInDarkTheme()
     
-    val colorScheme = when (themeMode) {
-        ThemeMode.LIGHT -> LightColorScheme
-        ThemeMode.DARK -> DarkColorScheme
-        ThemeMode.SYSTEM -> if (systemInDarkTheme) DarkColorScheme else LightColorScheme
+    val isDark = when (themeMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> systemInDarkTheme
     }
     
-    CompositionLocalProvider(LocalThemeMode provides themeMode) {
+    val colorScheme = if (isDark) DarkColorScheme else LightColorScheme
+    
+    val todoColors = if (isDark) {
+        TodoColors(
+            cardBackground = md_theme_dark_todoCard,
+            cardBackgroundCompleted = md_theme_dark_todoCardCompleted,
+            onCardBackground = md_theme_dark_onTodoCard,
+            onCardBackgroundCompleted = md_theme_dark_onTodoCardCompleted,
+            accent = md_theme_dark_todoAccent
+        )
+    } else {
+        TodoColors(
+            cardBackground = md_theme_light_todoCard,
+            cardBackgroundCompleted = md_theme_light_todoCardCompleted,
+            onCardBackground = md_theme_light_onTodoCard,
+            onCardBackgroundCompleted = md_theme_light_onTodoCardCompleted,
+            accent = md_theme_light_todoAccent
+        )
+    }
+    
+    CompositionLocalProvider(
+        LocalThemeMode provides themeMode,
+        LocalTodoColors provides todoColors
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,

@@ -36,6 +36,7 @@ kotlin {
             implementation(project(":core:domain"))
             implementation(project(":core:common"))
             implementation(project(":feature:todo"))
+            implementation(project(":feature:calendar"))
             implementation(project(":feature:statistics"))
             implementation(project(":feature:settings"))
             implementation(project(":feature:main"))

@@ -45,9 +45,9 @@ val md_theme_dark_error = Color(0xFFFFB4AB)
 val md_theme_dark_errorContainer = Color(0xFF93000A)
 val md_theme_dark_onError = Color(0xFF690005)
 val md_theme_dark_onErrorContainer = Color(0xFFFFDAD6)
-val md_theme_dark_background = Color(0xFF121212)
+val md_theme_dark_background = Color(0xFF1A2332) // 어두운 파란색 계열
 val md_theme_dark_onBackground = Color(0xFFE3E2E6)
-val md_theme_dark_surface = Color(0xFF1E1E1E)
+val md_theme_dark_surface = Color(0xFF1E2A3A) // 어두운 파란색 계열
 val md_theme_dark_onSurface = Color(0xFFE3E2E6)
 val md_theme_dark_surfaceVariant = Color(0xFF44474F)
 val md_theme_dark_onSurfaceVariant = Color(0xFFC4C6CF)
@@ -59,3 +59,17 @@ val md_theme_dark_inversePrimary = Color(0xFF0D6AFA)
 val priorityLow = Color(0xFF4CAF50)
 val priorityMedium = Color(0xFFFFC107)
 val priorityHigh = Color(0xFFE91E63)
+
+// Todo 카드 커스텀 색상 (라이트 모드)
+val md_theme_light_todoCard = Color(0xFFBBDEFB) // 옅은 하늘색
+val md_theme_light_todoCardCompleted = Color(0xFFE3F2FD) // 매우 옅은 하늘색
+val md_theme_light_onTodoCard = Color(0xFF1565C0) // 진한 파란색
+val md_theme_light_onTodoCardCompleted = Color(0xFF546E7A) // 회색
+val md_theme_light_todoAccent = Color(0xFF64B5F6) // 하늘색 (카테고리 배지)
+
+// Todo 카드 커스텀 색상 (다크 모드)
+val md_theme_dark_todoCard = Color(0xFF2C5F8D) // 중간 파란색
+val md_theme_dark_todoCardCompleted = Color(0xFF1E3A5F) // 어두운 파란색
+val md_theme_dark_onTodoCard = Color(0xFF90CAF9) // 밝은 파란색
+val md_theme_dark_onTodoCardCompleted = Color(0xFF90CAF9) // 밝은 파란색
+val md_theme_dark_todoAccent = Color(0xFF42A5F5) // 밝은 하늘색 (카테고리 배지)
