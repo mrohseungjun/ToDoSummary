@@ -12,4 +12,5 @@ sealed interface CalendarIntent {
     data object NavigateToPreviousMonth : CalendarIntent
     data object NavigateToNextMonth : CalendarIntent
     data object NavigateToToday : CalendarIntent
+    data class AddTodo(val date: LocalDate, val title: String, val priority: com.example.todosummer.core.domain.model.Priority, val category: String) : CalendarIntent
 }

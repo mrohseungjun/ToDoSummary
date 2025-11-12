@@ -6,6 +6,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.core.ui)
             implementation(projects.core.domain)
+            implementation(projects.feature.todo)
             // Koin Compose Multiplatform for DI in UI layer
             implementation(libs.koin.compose)
             // JetBrains KMP Lifecycle ViewModel

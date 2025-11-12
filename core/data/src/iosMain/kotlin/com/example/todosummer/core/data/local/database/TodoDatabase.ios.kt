@@ -2,6 +2,7 @@ package com.example.todosummer.core.data.local.database
 
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSHomeDirectory
 
@@ -12,7 +13,7 @@ actual fun getDatabaseBuilder(): RoomDatabase.Builder<TodoDatabase> {
     val dbFilePath = documentDirectory() + "/${TodoDatabase.DATABASE_NAME}"
     return Room.databaseBuilder<TodoDatabase>(
         name = dbFilePath
-    )
+    ).setDriver(BundledSQLiteDriver())
 }
 
 /**

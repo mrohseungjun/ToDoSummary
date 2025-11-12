@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.todosummer.core.domain.model.Todo
+import com.example.todosummer.feature.todo.presentation.components.TodoEditScreen
 import kotlinx.datetime.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,22 +29,22 @@ import kotlinx.datetime.*
 fun CalendarScreen(
     state: CalendarState,
     onIntent: (CalendarIntent) -> Unit,
-    onAddTodoForDate: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }
-    
+    var showAddDialog by remember { mutableStateOf(false) }
+
     val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val currentMonth = state.currentMonth ?: YearMonth(today.year, today.monthNumber)
     val selectedDate = state.selectedDate
-    
+
     // 선택된 날짜의 Todo 목록
     val todosForSelectedDate = remember(selectedDate, state.todos) {
         selectedDate?.let { date ->
             state.todos.filter { it.createdAt.date == date || it.dueDate?.date == date }
         } ?: emptyList()
     }
-    
+
     Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -57,14 +58,14 @@ fun CalendarScreen(
                 onNextMonth = { onIntent(CalendarIntent.NavigateToNextMonth) },
                 onTodayClick = { onIntent(CalendarIntent.NavigateToToday) }
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // 요일 헤더
             WeekdayHeader()
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             // 캘린더 그리드
             CalendarGrid(
                 currentMonth = currentMonth,
@@ -77,66 +78,42 @@ fun CalendarScreen(
                 }
             )
         }
-        
-        // FAB
-        if (selectedDate != null) {
-            FloatingActionButton(
-                onClick = { selectedDate?.let { onAddTodoForDate(it) } },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-                    .navigationBarsPadding(),
-                containerColor = Color(0xFF42A5F5),
-                contentColor = Color.White
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "할 일 추가"
-                )
-            }
-        }
+
     }
-    
-    // 바텀시트: 선택된 날짜의 Todo 목록
+
+    // 바텀시트: 선택된 날짜의 Todo 목록 + 추가 기능
     if (showBottomSheet && selectedDate != null) {
-        ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
-            containerColor = MaterialTheme.colorScheme.surface
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "${selectedDate!!.monthNumber}월 ${selectedDate!!.dayOfMonth}일 ${getDayOfWeekKorean(selectedDate!!.dayOfWeek)}",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+        TodoBottomSheet(
+            selectedDate = selectedDate,
+            todos = todosForSelectedDate,
+            onDismiss = { showBottomSheet = false },
+            onAddTodo = { showAddDialog = true }
+        )
+    }
+
+    // Todo 추가 다이얼로그 (TodoEditScreen 재사용)
+    if (showAddDialog && selectedDate != null) {
+        TodoEditScreen(
+            todo = null,
+            categories = state.categories.map { it.name },
+            onSave = { newTodo ->
+                // 선택된 날짜로 createdAt 설정
+                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val todoWithDate = newTodo.copy(
+                    createdAt = LocalDateTime(selectedDate, now.time)
                 )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                if (todosForSelectedDate.isEmpty()) {
-                    Text(
-                        text = "이 날짜에 할 일이 없습니다",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 32.dp)
-                    )
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.heightIn(max = 400.dp)
-                    ) {
-                        items(todosForSelectedDate) { todo ->
-                            TodoItemInSheet(todo = todo)
-                        }
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-        }
+                onIntent(CalendarIntent.AddTodo(
+                    selectedDate,
+                    todoWithDate.title,
+                    todoWithDate.priority,
+                    todoWithDate.category
+                ))
+                showAddDialog = false
+            },
+            onAddCategory = { /* 카테고리 추가는 TodoViewModel에서 처리 */ },
+            onDeleteCategory = { /* 카테고리 삭제는 TodoViewModel에서 처리 */ },
+            onCancel = { showAddDialog = false }
+        )
     }
 }
 
@@ -358,4 +335,67 @@ private fun getDayOfWeekKorean(dayOfWeek: DayOfWeek): String {
         else -> ""
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TodoBottomSheet(
+    selectedDate: LocalDate,
+    todos: List<Todo>,
+    onDismiss: () -> Unit,
+    onAddTodo: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${selectedDate.monthNumber}월 ${selectedDate.dayOfMonth}일 ${getDayOfWeekKorean(selectedDate.dayOfWeek)}",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                IconButton(onClick = onAddTodo) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "할 일 추가",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            if (todos.isEmpty()) {
+                Text(
+                    text = "이 날짜에 할 일이 없습니다",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 32.dp)
+                )
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.heightIn(max = 400.dp)
+                ) {
+                    items(todos) { todo ->
+                        TodoItemInSheet(todo = todo)
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
 

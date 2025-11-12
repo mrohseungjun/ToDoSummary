@@ -19,6 +19,7 @@ koin-compose = "1.1.2"
 kotlinx-coroutines = "1.8.0"
 kotlinx-datetime = "0.5.0"
 kotlinx-serialization = "1.6.2"
+datastore = "1.1.1"
 room = "2.7.2"
 sqlite = "2.5.2"          # bundled sqlite
 ksp = "2.2.0-2.0.2"     # Kotlin 2.2.0 대응 KSP
@@ -69,6 +70,10 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+
+# DataStore
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastore" }
+androidx-datastore-preferences-android = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 # Build Logic
 android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }

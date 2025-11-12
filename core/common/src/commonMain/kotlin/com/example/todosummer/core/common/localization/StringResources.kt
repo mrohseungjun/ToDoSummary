@@ -50,6 +50,23 @@ interface StringResources {
     val statisticsResult: String
     val statisticsLoadingMessage: String
     val statisticsLoadModel: String
+    val statisticsActivityReport: String
+    val statisticsPeriodWeek: String
+    val statisticsPeriodMonth: String
+    val statisticsPeriodAll: String
+    val statisticsProductivityScore: String
+    val statisticsStreak: String
+    val statisticsTotalCompleted: String
+    val statisticsCompletionRate: String
+    val statisticsTopCategory: String
+    val statisticsCategoryDistribution: String
+    val statisticsWeeklyTrend: String
+    val statisticsDays: String
+    val statisticsBest: String
+    val statisticsTotal: String
+    val statisticsOf: String
+    val statisticsGreat: String
+    val statisticsKeepGoing: String
     
     // 설정 관련
     val settingsTitle: String
@@ -58,6 +75,10 @@ interface StringResources {
     val settingsThemeLight: String
     val settingsThemeDark: String
     val settingsThemeSystem: String
+    
+    // 네비게이션
+    val navHome: String
+    val navCalendar: String
 }
 
 /**
@@ -106,6 +127,23 @@ class EnglishStringResources : StringResources {
     override val statisticsResult: String = "Statistics Result"
     override val statisticsLoadingMessage: String = "Loading statistics model..."
     override val statisticsLoadModel: String = "Load statistics model"
+    override val statisticsActivityReport: String = "Activity Report"
+    override val statisticsPeriodWeek: String = "Week"
+    override val statisticsPeriodMonth: String = "Month"
+    override val statisticsPeriodAll: String = "All"
+    override val statisticsProductivityScore: String = "Productivity Score"
+    override val statisticsStreak: String = "Streak"
+    override val statisticsTotalCompleted: String = "Total Completed"
+    override val statisticsCompletionRate: String = "Completion Rate"
+    override val statisticsTopCategory: String = "Top Category"
+    override val statisticsCategoryDistribution: String = "Category Distribution"
+    override val statisticsWeeklyTrend: String = "Weekly Trend"
+    override val statisticsDays: String = "days"
+    override val statisticsBest: String = "Best"
+    override val statisticsTotal: String = "Total"
+    override val statisticsOf: String = "of"
+    override val statisticsGreat: String = "Great!"
+    override val statisticsKeepGoing: String = "Keep going!"
     
     // 설정 관련
     override val settingsTitle: String = "Settings"
@@ -114,6 +152,10 @@ class EnglishStringResources : StringResources {
     override val settingsThemeLight: String = "Light"
     override val settingsThemeDark: String = "Dark"
     override val settingsThemeSystem: String = "System Default"
+    
+    // 네비게이션
+    override val navHome: String = "Home"
+    override val navCalendar: String = "Calendar"
 }
 
 /**
@@ -162,6 +204,23 @@ class KoreanStringResources : StringResources {
     override val statisticsResult: String = "통계 결과"
     override val statisticsLoadingMessage: String = "통계 모델을 로드하는 중입니다..."
     override val statisticsLoadModel: String = "통계 모델 로드하기"
+    override val statisticsActivityReport: String = "나의 활동 리포트"
+    override val statisticsPeriodWeek: String = "주간"
+    override val statisticsPeriodMonth: String = "월간"
+    override val statisticsPeriodAll: String = "전체"
+    override val statisticsProductivityScore: String = "생산성 점수"
+    override val statisticsStreak: String = "연속 달성"
+    override val statisticsTotalCompleted: String = "총 완료"
+    override val statisticsCompletionRate: String = "완료율"
+    override val statisticsTopCategory: String = "최다 카테고리"
+    override val statisticsCategoryDistribution: String = "카테고리별 분포"
+    override val statisticsWeeklyTrend: String = "주간 완료율 추이"
+    override val statisticsDays: String = "일"
+    override val statisticsBest: String = "최고"
+    override val statisticsTotal: String = "Total"
+    override val statisticsOf: String = "개 중"
+    override val statisticsGreat: String = "훌륭해요!"
+    override val statisticsKeepGoing: String = "조금만 더!"
     
     // 설정 관련
     override val settingsTitle: String = "설정"
@@ -170,6 +229,10 @@ class KoreanStringResources : StringResources {
     override val settingsThemeLight: String = "라이트 모드"
     override val settingsThemeDark: String = "다크 모드"
     override val settingsThemeSystem: String = "시스템 기본값"
+    
+    // 네비게이션
+    override val navHome: String = "홈"
+    override val navCalendar: String = "캘린더"
 }
 
 /**

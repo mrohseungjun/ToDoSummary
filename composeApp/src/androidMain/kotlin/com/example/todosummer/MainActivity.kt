@@ -10,10 +10,15 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
+import com.example.todosummer.core.data.preferences.initializeDataStore
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // DataStore 초기화
+        initializeDataStore(this)
+        
         enableEdgeToEdge()
 
         setContent {

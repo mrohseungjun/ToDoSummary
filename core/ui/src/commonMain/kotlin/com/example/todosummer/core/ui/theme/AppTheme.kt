@@ -80,6 +80,19 @@ data class TodoColors(
     val onAccent: Color = Color.White
 )
 
+// 통계 카드 색상
+data class StatsColors(
+    val cardBackground: Color,
+    val cardPrimary: Color,
+    val cardSecondary: Color,
+    val cardTertiary: Color
+)
+
+// 카테고리 차트 색상
+data class CategoryChartColors(
+    val colors: List<Color>
+)
+
 // Todo 색상 CompositionLocal (Material 3 패턴 준수)
 val LocalTodoColors = compositionLocalOf {
     TodoColors(
@@ -88,6 +101,26 @@ val LocalTodoColors = compositionLocalOf {
         onCardBackground = md_theme_light_onTodoCard,
         onCardBackgroundCompleted = md_theme_light_onTodoCardCompleted,
         accent = md_theme_light_todoAccent
+    )
+}
+
+// 통계 색상 CompositionLocal
+val LocalStatsColors = compositionLocalOf {
+    StatsColors(
+        cardBackground = md_theme_light_statsCard,
+        cardPrimary = md_theme_light_statsCardPrimary,
+        cardSecondary = md_theme_light_statsCardSecondary,
+        cardTertiary = md_theme_light_statsCardTertiary
+    )
+}
+
+// 카테고리 차트 색상 CompositionLocal
+val LocalCategoryChartColors = compositionLocalOf {
+    CategoryChartColors(
+        colors = listOf(
+            categoryColor1, categoryColor2, categoryColor3, categoryColor4, categoryColor5,
+            categoryColor6, categoryColor7, categoryColor8, categoryColor9, categoryColor10
+        )
     )
 }
 
@@ -127,9 +160,34 @@ fun AppTheme(
         )
     }
     
+    val statsColors = if (isDark) {
+        StatsColors(
+            cardBackground = md_theme_dark_statsCard,
+            cardPrimary = md_theme_dark_statsCardPrimary,
+            cardSecondary = md_theme_dark_statsCardSecondary,
+            cardTertiary = md_theme_dark_statsCardTertiary
+        )
+    } else {
+        StatsColors(
+            cardBackground = md_theme_light_statsCard,
+            cardPrimary = md_theme_light_statsCardPrimary,
+            cardSecondary = md_theme_light_statsCardSecondary,
+            cardTertiary = md_theme_light_statsCardTertiary
+        )
+    }
+    
+    val categoryChartColors = CategoryChartColors(
+        colors = listOf(
+            categoryColor1, categoryColor2, categoryColor3, categoryColor4, categoryColor5,
+            categoryColor6, categoryColor7, categoryColor8, categoryColor9, categoryColor10
+        )
+    )
+    
     CompositionLocalProvider(
         LocalThemeMode provides themeMode,
-        LocalTodoColors provides todoColors
+        LocalTodoColors provides todoColors,
+        LocalStatsColors provides statsColors,
+        LocalCategoryChartColors provides categoryChartColors
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

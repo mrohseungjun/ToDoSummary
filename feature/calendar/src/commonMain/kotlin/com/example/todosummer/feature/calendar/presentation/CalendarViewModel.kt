@@ -17,7 +17,8 @@ import kotlinx.datetime.toLocalDateTime
  * Clean Architecture + MVI 패턴 준수
  */
 class CalendarViewModel(
-    private val useCases: TodoUseCases
+    private val useCases: TodoUseCases,
+    private val categoryRepository: com.example.todosummer.core.domain.repository.CategoryRepository
 ) : ViewModel() {
     
     private val _state = MutableStateFlow(CalendarState())
@@ -32,6 +33,7 @@ class CalendarViewModel(
             )
         }
         loadTodos()
+        loadCategories()
     }
     
     /**
@@ -49,6 +51,23 @@ class CalendarViewModel(
                         isLoading = false, 
                         error = "Todo 로드 중 오류가 발생했습니다: ${e.message}"
                     ) 
+                }
+            }
+        }
+    }
+    
+    /**
+     * 카테고리 목록 로드
+     */
+    private fun loadCategories() {
+        viewModelScope.launch {
+            try {
+                categoryRepository.getAllCategories().collect { categories ->
+                    _state.update { it.copy(categories = categories) }
+                }
+            } catch (e: Exception) {
+                _state.update { 
+                    it.copy(error = "카테고리 로드 중 오류가 발생했습니다: ${e.message}")
                 }
             }
         }
@@ -100,6 +119,34 @@ class CalendarViewModel(
     }
     
     /**
+     * Todo 추가
+     */
+    fun addTodo(date: kotlinx.datetime.LocalDate, title: String, priority: com.example.todosummer.core.domain.model.Priority, category: String) {
+        viewModelScope.launch {
+            try {
+                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val todoDateTime = kotlinx.datetime.LocalDateTime(date, now.time)
+                
+                val todo = com.example.todosummer.core.domain.model.Todo(
+                    id = "",
+                    title = title,
+                    isCompleted = false,
+                    createdAt = todoDateTime,
+                    updatedAt = null,
+                    dueDate = null,
+                    priority = priority,
+                    category = category
+                )
+                useCases.addTodo(todo)
+            } catch (e: Exception) {
+                _state.update { 
+                    it.copy(error = "Todo 추가 중 오류가 발생했습니다: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    /**
      * 인텐트 기반 액션 처리 (MVI 패턴)
      */
     fun onIntent(intent: CalendarIntent) {
@@ -110,6 +157,7 @@ class CalendarViewModel(
             CalendarIntent.NavigateToPreviousMonth -> navigateToPreviousMonth()
             CalendarIntent.NavigateToNextMonth -> navigateToNextMonth()
             CalendarIntent.NavigateToToday -> navigateToToday()
+            is CalendarIntent.AddTodo -> addTodo(intent.date, intent.title, intent.priority, intent.category)
         }
     }
 }

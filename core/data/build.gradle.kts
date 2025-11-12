@@ -12,10 +12,14 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":core:domain"))
             implementation(project(":core:common"))
+            implementation(project(":core:ui"))
             
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
+            
+            // DataStore
+            implementation(libs.androidx.datastore.preferences)
             
             // Koin
             implementation(libs.koin.core)
@@ -24,6 +28,9 @@ kotlin {
         androidMain.dependencies {
             // Room
             implementation(libs.room.runtime)
+
+            // DataStore Android
+            implementation(libs.androidx.datastore.preferences.android)
 
             // Koin Android
             implementation(libs.koin.android)

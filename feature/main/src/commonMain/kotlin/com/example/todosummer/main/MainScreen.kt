@@ -36,8 +36,15 @@ import com.example.todosummer.feature.settings.SettingsScreen
 import com.example.todosummer.feature.todo.presentation.TodoListRoute
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import com.example.todosummer.core.data.preferences.UserPreferencesRepository
+import org.koin.compose.koinInject
 
 @Composable
 fun MainScreen(
@@ -67,10 +74,6 @@ fun MainScreen(
                             modifier = Modifier.padding(paddingValues)
                         )
                         MainTab.CALENDAR -> CalendarRoute(
-                            onAddTodoForDate = { date ->
-                                // 선택된 날짜로 이동하고 Todo 추가 화면 열기
-                                selectedTab = MainTab.HOME
-                            },
                             modifier = Modifier.padding(paddingValues)
                         )
                         MainTab.STATISTICS -> StatisticsRoute(
@@ -93,7 +96,9 @@ fun MainScreen(
 @Preview
 @Composable
 fun MainScreenPreview() {
-    val appState = remember { MainAppState() }
+    // Preview용 임시 Repository (실제 앱에서는 Koin에서 주입)
+    val preferencesRepository: UserPreferencesRepository = koinInject()
+    val appState = remember { MainAppState(preferencesRepository) }
     MainScreen(
         appState = appState,
     )
@@ -125,8 +130,8 @@ private fun MainBottomBar(
         )
 
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "홈") },
-            label = { Text("홈") },
+            icon = { Icon(Icons.Default.Home, contentDescription = strings.navHome) },
+            label = { Text(strings.navHome) },
             selected = selectedTab == MainTab.HOME,
             onClick = { onTabSelected(MainTab.HOME) },
             colors = itemColors,
@@ -134,8 +139,8 @@ private fun MainBottomBar(
         )
 
         NavigationBarItem(
-            icon = { Icon(Icons.Default.DateRange, contentDescription = "캘린더") },
-            label = { Text("캘린더") },
+            icon = { Icon(Icons.Default.DateRange, contentDescription = strings.navCalendar) },
+            label = { Text(strings.navCalendar) },
             selected = selectedTab == MainTab.CALENDAR,
             onClick = { onTabSelected(MainTab.CALENDAR) },
             colors = itemColors,
@@ -187,18 +192,34 @@ enum class MainTab {
     SETTINGS
 }
 
-class MainAppState {
-    private val _languageMode = MutableStateFlow(com.example.todosummer.core.common.localization.LanguageMode.ENGLISH)
-    val languageMode: StateFlow<com.example.todosummer.core.common.localization.LanguageMode> = _languageMode.asStateFlow()
+class MainAppState(
+    private val preferencesRepository: UserPreferencesRepository
+) {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    
+    val languageMode: StateFlow<com.example.todosummer.core.common.localization.LanguageMode> = 
+        preferencesRepository.languageMode.stateIn(
+            scope = scope,
+            started = SharingStarted.Eagerly,
+            initialValue = com.example.todosummer.core.common.localization.LanguageMode.KOREAN
+        )
 
-    private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
-    val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+    val themeMode: StateFlow<ThemeMode> = 
+        preferencesRepository.themeMode.stateIn(
+            scope = scope,
+            started = SharingStarted.Eagerly,
+            initialValue = ThemeMode.DARK
+        )
 
     fun setLanguageMode(mode: com.example.todosummer.core.common.localization.LanguageMode) {
-        _languageMode.value = mode
+        scope.launch {
+            preferencesRepository.setLanguageMode(mode)
+        }
     }
 
     fun setThemeMode(mode: ThemeMode) {
-        _themeMode.value = mode
+        scope.launch {
+            preferencesRepository.setThemeMode(mode)
+        }
     }
 }

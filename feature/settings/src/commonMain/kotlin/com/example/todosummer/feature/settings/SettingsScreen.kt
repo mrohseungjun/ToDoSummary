@@ -1,34 +1,27 @@
 package com.example.todosummer.feature.settings
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.example.todosummer.core.common.localization.LanguageMode
 import com.example.todosummer.core.common.localization.stringResource
 import com.example.todosummer.core.ui.AppIcons
-import com.example.todosummer.core.ui.components.AppTopBar
-import com.example.todosummer.core.ui.theme.Dimens
 import com.example.todosummer.core.ui.theme.ThemeMode
 
 /**
  * 앱 설정 화면 (feature/settings)
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     currentLanguage: LanguageMode,
@@ -39,166 +32,156 @@ fun SettingsScreen(
 ) {
     val strings = stringResource()
 
-    Scaffold(
-        topBar = { AppTopBar(title = strings.settingsTitle) }
-    ) { paddingValues ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(Dimens.spacing16)
-                .verticalScroll(rememberScrollState())
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        // 헤더
+        Text(
+            text = strings.settingsTitle,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+        
+        // 언어 설정
+        SettingSection(
+            title = strings.settingsLanguage,
+            icon = AppIcons.Language
         ) {
-            // 언어 설정
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(Dimens.spacing16)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = AppIcons.Language,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-
-                        Spacer(modifier = Modifier.width(Dimens.spacing8))
-
-                        Text(
-                            text = strings.settingsLanguage,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(Dimens.spacing16))
-
-                    // 영어 옵션
-                    LanguageOption(
-                        selected = currentLanguage == LanguageMode.ENGLISH,
-                        onClick = { onLanguageChange(LanguageMode.ENGLISH) },
-                        text = "English"
-                    )
-
-                    // 한국어 옵션
-                    LanguageOption(
-                        selected = currentLanguage == LanguageMode.KOREAN,
-                        onClick = { onLanguageChange(LanguageMode.KOREAN) },
-                        text = "한국어"
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(Dimens.spacing16))
-
-            // 테마 설정
-            Card(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(Dimens.spacing16)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = AppIcons.DarkMode,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-
-                        Spacer(modifier = Modifier.width(Dimens.spacing8))
-
-                        Text(
-                            text = strings.settingsTheme,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(Dimens.spacing16))
-
-                    // 라이트 모드 옵션
-                    ThemeOption(
-                        selected = currentTheme == ThemeMode.LIGHT,
-                        onClick = { onThemeChange(ThemeMode.LIGHT) },
-                        text = strings.settingsThemeLight
-                    )
-
-                    // 다크 모드 옵션
-                    ThemeOption(
-                        selected = currentTheme == ThemeMode.DARK,
-                        onClick = { onThemeChange(ThemeMode.DARK) },
-                        text = strings.settingsThemeDark
-                    )
-
-                    // 시스템 모드 옵션
-                    ThemeOption(
-                        selected = currentTheme == ThemeMode.SYSTEM,
-                        onClick = { onThemeChange(ThemeMode.SYSTEM) },
-                        text = strings.settingsThemeSystem
-                    )
-                }
-            }
+            ModernOption(
+                selected = currentLanguage == LanguageMode.ENGLISH,
+                onClick = { onLanguageChange(LanguageMode.ENGLISH) },
+                text = "English"
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            ModernOption(
+                selected = currentLanguage == LanguageMode.KOREAN,
+                onClick = { onLanguageChange(LanguageMode.KOREAN) },
+                text = "한국어"
+            )
+        }
+        
+        // 테마 설정
+        SettingSection(
+            title = strings.settingsTheme,
+            icon = AppIcons.DarkMode
+        ) {
+            ModernOption(
+                selected = currentTheme == ThemeMode.LIGHT,
+                onClick = { onThemeChange(ThemeMode.LIGHT) },
+                text = strings.settingsThemeLight
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            ModernOption(
+                selected = currentTheme == ThemeMode.DARK,
+                onClick = { onThemeChange(ThemeMode.DARK) },
+                text = strings.settingsThemeDark
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            ModernOption(
+                selected = currentTheme == ThemeMode.SYSTEM,
+                onClick = { onThemeChange(ThemeMode.SYSTEM) },
+                text = strings.settingsThemeSystem
+            )
         }
     }
 }
 
-/**
- * 언어 옵션 항목
- */
 @Composable
-private fun LanguageOption(
-    selected: Boolean,
-    onClick: () -> Unit,
-    text: String
+private fun SettingSection(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    content: @Composable ColumnScope.() -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = Dimens.spacing8),
-        verticalAlignment = Alignment.CenterVertically
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        shape = RoundedCornerShape(20.dp)
     ) {
-        RadioButton(
-            selected = selected,
-            onClick = onClick
-        )
-
-        Spacer(modifier = Modifier.width(Dimens.spacing8))
-
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            content()
+        }
     }
 }
 
-/**
- * 테마 옵션 항목
- */
 @Composable
-private fun ThemeOption(
+private fun ModernOption(
     selected: Boolean,
     onClick: () -> Unit,
     text: String
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = Dimens.spacing8),
-        verticalAlignment = Alignment.CenterVertically
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        ),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (selected) 4.dp else 0.dp
+        )
     ) {
-        RadioButton(
-            selected = selected,
-            onClick = onClick
-        )
-
-        Spacer(modifier = Modifier.width(Dimens.spacing8))
-
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                color = if (selected) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
+            
+            if (selected) {
+                Icon(
+                    imageVector = AppIcons.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
     }
 }

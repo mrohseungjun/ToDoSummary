@@ -96,14 +96,16 @@ fun TodoListScreen(
             val isPast = selectedDate < today.date
             
             when {
-                // 오늘: 오늘까지 생성된 Todo + 오늘이 마감일인 Todo
+                // 오늘: 오늘 생성된 Todo + 과거에 생성된 미완료 Todo + 오늘이 마감일인 Todo
                 isToday -> {
-                    todoDate <= selectedDate || todoDueDate == selectedDate
+                    (todoDate == selectedDate) || 
+                    (todoDate < selectedDate && !todo.isCompleted) ||
+                    (todoDueDate == selectedDate)
                 }
                 
-                // 과거: 해당 날짜에 생성된 미완료 Todo
+                // 과거: 해당 날짜에 생성된 Todo (완료 여부 무관)
                 isPast -> {
-                    todoDate == selectedDate && !todo.isCompleted
+                    todoDate == selectedDate
                 }
                 
                 // 미래: 해당 날짜에 생성되거나 마감일인 Todo
@@ -117,7 +119,7 @@ fun TodoListScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // 상단 날짜 네비게이션 바

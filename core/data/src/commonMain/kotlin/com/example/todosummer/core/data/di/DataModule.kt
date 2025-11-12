@@ -6,6 +6,8 @@ import com.example.todosummer.core.data.local.dao.CategoryDao
 import com.example.todosummer.core.data.repository.TodoRepositoryImpl
 import com.example.todosummer.core.data.repository.CategoryRepositoryImpl
 import com.example.todosummer.core.data.source.TodoDataSource
+import com.example.todosummer.core.data.preferences.UserPreferencesRepository
+import com.example.todosummer.core.data.preferences.createDataStore
 import com.example.todosummer.core.domain.repository.TodoRepository
 import com.example.todosummer.core.domain.repository.CategoryRepository
 import org.koin.dsl.module
@@ -22,4 +24,8 @@ val dataModule = module {
     // Repository
     single<TodoRepository> { TodoRepositoryImpl(get()) }
     single<CategoryRepository> { CategoryRepositoryImpl(get()) }
+    
+    // DataStore & Preferences
+    single { createDataStore() }
+    single { UserPreferencesRepository(get()) }
 }

@@ -7,7 +7,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import com.example.todosummer.di.initKoinIfNeeded
 import com.example.todosummer.main.MainAppState
 import com.example.todosummer.main.MainScreen
+import com.example.todosummer.core.data.preferences.UserPreferencesRepository
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.koinInject
 
 @Composable
 @Preview
@@ -16,7 +18,8 @@ fun App() {
     initKoinIfNeeded()
 
     // 앱 전역 상태
-    val appState = remember { MainAppState() }
+    val preferencesRepository: UserPreferencesRepository = koinInject()
+    val appState = remember { MainAppState(preferencesRepository) }
 
     MaterialTheme {
         MainScreen(

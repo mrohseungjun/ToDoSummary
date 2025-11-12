@@ -9,7 +9,6 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun CalendarRoute(
-    onAddTodoForDate: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val viewModel: CalendarViewModel = koinViewModel()
@@ -18,7 +17,6 @@ fun CalendarRoute(
     CalendarScreen(
         state = state,
         onIntent = viewModel::onIntent,
-        onAddTodoForDate = onAddTodoForDate,
         modifier = modifier
     )
 }

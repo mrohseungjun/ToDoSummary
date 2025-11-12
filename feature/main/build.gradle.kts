@@ -7,6 +7,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.core.ui)
             implementation(projects.core.common)
+            implementation(projects.core.data)
 
             // Feature dependencies
             implementation(projects.feature.todo)
@@ -17,6 +18,10 @@ kotlin {
             // Compose runtime
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            
+            // Koin
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
         }
     }
 }

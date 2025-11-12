@@ -9,6 +9,7 @@ import kotlinx.datetime.LocalDate
 data class CalendarState(
     val isLoading: Boolean = true,
     val todos: List<Todo> = emptyList(),
+    val categories: List<com.example.todosummer.core.domain.model.Category> = emptyList(),
     val selectedDate: LocalDate? = null,
     val currentMonth: YearMonth? = null,
     val error: String? = null

@@ -8,5 +8,5 @@ import org.koin.dsl.module
  * 캘린더 모듈의 Koin DI 설정
  */
 val calendarModule = module {
-    viewModel { CalendarViewModel(useCases = get()) }
+    viewModel { CalendarViewModel(useCases = get(), categoryRepository = get()) }
 }
