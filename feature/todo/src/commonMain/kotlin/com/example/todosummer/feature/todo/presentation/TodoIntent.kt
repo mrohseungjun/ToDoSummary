@@ -14,6 +14,8 @@ sealed interface TodoIntent {
         val priority: Priority,
         val category: String = "업무"
     ) : TodoIntent
+    
+    data class AddWithDetails(val todo: Todo) : TodoIntent
 
     data class Update(val todo: Todo) : TodoIntent
     data class Delete(val id: String) : TodoIntent

@@ -1,6 +1,7 @@
 package com.example.todosummer.core.data.repository
 
-import com.example.todosummer.core.data.model.TodoEntity
+import com.example.todosummer.core.data.local.entity.toDomain
+import com.example.todosummer.core.data.local.entity.toEntity
 import com.example.todosummer.core.data.source.TodoDataSource
 import com.example.todosummer.core.domain.model.Todo
 import com.example.todosummer.core.domain.repository.TodoRepository
@@ -25,11 +26,13 @@ class TodoRepositoryImpl(
     }
     
     override suspend fun addTodo(todo: Todo): String {
-        return dataSource.addTodo(TodoEntity.fromDomain(todo))
+        println("[TodoRepository] Adding todo: id=${todo.id}, hasReminder=${todo.hasReminder}, reminderTime=${todo.reminderTime}")
+        return dataSource.addTodo(todo.toEntity())
     }
     
     override suspend fun updateTodo(todo: Todo): Boolean {
-        return dataSource.updateTodo(TodoEntity.fromDomain(todo))
+        println("[TodoRepository] Updating todo: id=${todo.id}, hasReminder=${todo.hasReminder}, reminderTime=${todo.reminderTime}")
+        return dataSource.updateTodo(todo.toEntity())
     }
     
     override suspend fun deleteTodo(id: String): Boolean {

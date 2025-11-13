@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import com.example.todosummer.core.data.preferences.initializeDataStore
+import com.example.todosummer.core.data.notification.initializeNotificationScheduler
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,6 +19,9 @@ class MainActivity : ComponentActivity() {
         
         // DataStore 초기화
         initializeDataStore(this)
+        
+        // NotificationScheduler 초기화
+        initializeNotificationScheduler(this)
         
         enableEdgeToEdge()
 

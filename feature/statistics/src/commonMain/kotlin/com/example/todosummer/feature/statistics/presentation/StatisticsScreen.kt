@@ -243,14 +243,18 @@ private fun CategoryDistributionCard(
 ) {
     val total = distribution.values.sum()
     
-    // 테마에서 카테고리 색상 가져오기
+    // 테마에서 카테고리 색상 가져오기 (고정 10개 색상)
     val categoryChartColors = com.example.todosummer.core.ui.theme.LocalCategoryChartColors.current
     val baseColors = categoryChartColors.colors
     
-    // 카테고리별로 일관된 색상 생성 (카테고리 이름 해시 기반)
+    // 카테고리별로 고정된 색상 할당 (순서대로 0~9번 인덱스 사용)
+    val sortedCategories = distribution.keys.sorted()
+    val categoryColorMap = sortedCategories.mapIndexed { index, categoryName ->
+        categoryName to baseColors[index % baseColors.size]
+    }.toMap()
+    
     val colors = distribution.keys.map { categoryName ->
-        val colorIndex = kotlin.math.abs(categoryName.hashCode()) % baseColors.size
-        baseColors[colorIndex]
+        categoryColorMap[categoryName] ?: baseColors[0]
     }
     
     val statsColors = com.example.todosummer.core.ui.theme.LocalStatsColors.current
@@ -409,9 +413,8 @@ private fun TrendCard(
     trendLabels: List<String>,
     currentRate: Float
 ) {
-    val statsColors = com.example.todosummer.core.ui.theme.LocalStatsColors.current
-    val strings = stringResource()
-    
+    val statsColors = LocalStatsColors.current
+
     val title = when (period) {
         StatisticsPeriod.WEEK -> "주간 완료율 추이"
         StatisticsPeriod.MONTH -> "월간 완료율 추이"

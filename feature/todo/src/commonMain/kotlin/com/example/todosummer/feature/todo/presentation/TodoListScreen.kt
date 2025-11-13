@@ -179,13 +179,8 @@ fun TodoListScreen(
             categories = state.categories.map { it.name },
             onSave = { todo ->
                 if (currentTodo == null) {
-                    viewModel.onIntent(
-                        TodoIntent.Add(
-                            title = todo.title,
-                            priority = todo.priority,
-                            category = todo.category
-                        )
-                    )
+                    // 새 Todo 추가 - 전체 Todo 객체를 사용하여 알림 정보 포함
+                    viewModel.onIntent(TodoIntent.AddWithDetails(todo))
                 } else {
                     viewModel.onIntent(TodoIntent.Update(todo))
                 }

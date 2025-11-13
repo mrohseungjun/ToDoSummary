@@ -1,6 +1,6 @@
 package com.example.todosummer.core.data.source.local
 
-import com.example.todosummer.core.data.model.TodoEntity
+import com.example.todosummer.core.data.local.entity.TodoEntity
 import com.example.todosummer.core.data.source.TodoDataSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

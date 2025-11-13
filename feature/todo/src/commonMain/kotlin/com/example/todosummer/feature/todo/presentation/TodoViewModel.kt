@@ -5,6 +5,7 @@ import com.example.todosummer.core.domain.model.Priority
 import com.example.todosummer.core.domain.model.Todo
 import com.example.todosummer.core.domain.repository.CategoryRepository
 import com.example.todosummer.core.domain.usecase.TodoUseCases
+import com.example.todosummer.core.domain.notification.NotificationScheduler
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +25,8 @@ import kotlin.random.Random
  */
 class TodoViewModel(
     private val useCases: TodoUseCases,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val notificationScheduler: NotificationScheduler
 ) : ViewModel() {
     private val _state = MutableStateFlow(TodoState())
     val state: StateFlow<TodoState> = _state.asStateFlow()
@@ -76,11 +78,33 @@ class TodoViewModel(
     }
     
     /**
+     * 상세 정보(알림 포함)가 있는 Todo 항목을 추가합니다.
+     */
+    fun addTodoWithDetails(todo: Todo) {
+        if (todo.title.isBlank()) return
+        
+        viewModelScope.launch {
+            try {
+                useCases.addTodo(todo)
+                
+                // 알림 스케줄링
+                if (todo.hasReminder && todo.reminderTime != null) {
+                    notificationScheduler.scheduleNotification(todo)
+                }
+            } catch (e: Exception) {
+                _state.update { it.copy(error = "Todo 추가 중 오류가 발생했습니다: ${e.message}") }
+            }
+        }
+    }
+    
+    /**
      * Todo 항목을 삭제합니다.
      */
     fun deleteTodo(id: String) {
         viewModelScope.launch {
             try {
+                // 알림 취소
+                notificationScheduler.cancelNotification(id)
                 useCases.deleteTodo(id)
             } catch (e: Exception) {
                 _state.update { it.copy(error = "삭제 중 오류가 발생했습니다: ${e.message}") }
@@ -111,6 +135,12 @@ class TodoViewModel(
                     updatedAt = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
                 )
                 useCases.updateTodo(updatedTodo)
+                
+                // 알림 스케줄링 (기존 알림 취소 후 새로 설정)
+                notificationScheduler.cancelNotification(updatedTodo.id)
+                if (updatedTodo.hasReminder && updatedTodo.reminderTime != null) {
+                    notificationScheduler.scheduleNotification(updatedTodo)
+                }
             } catch (e: Exception) {
                 _state.update { it.copy(error = "업데이트 중 오류가 발생했습니다: ${e.message}") }
             }
@@ -118,13 +148,27 @@ class TodoViewModel(
     }
 
     /**
-     * 새 카테고리를 추가합니다
+     * 새 카테고리를 추가합니다 (최대 10개)
      */
     fun addCategory(name: String) {
         if (name.isBlank()) return
         
         viewModelScope.launch {
             try {
+                val currentCategories = _state.value.categories
+                
+                // 최대 10개 제한
+                if (currentCategories.size >= 10) {
+                    _state.update { it.copy(error = "카테고리는 최대 10개까지만 추가할 수 있습니다.") }
+                    return@launch
+                }
+                
+                // 중복 체크
+                if (currentCategories.any { it.name == name }) {
+                    _state.update { it.copy(error = "이미 존재하는 카테고리입니다.") }
+                    return@launch
+                }
+                
                 val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
                 val category = Category(
                     id = "category_${Random.nextLong()}",
@@ -184,6 +228,7 @@ class TodoViewModel(
                 priority = intent.priority,
                 category = intent.category
             )
+            is TodoIntent.AddWithDetails -> addTodoWithDetails(intent.todo)
             is TodoIntent.Update -> updateTodo(intent.todo)
             is TodoIntent.Delete -> deleteTodo(intent.id)
             is TodoIntent.Toggle -> toggleTodoCompletion(intent.id)

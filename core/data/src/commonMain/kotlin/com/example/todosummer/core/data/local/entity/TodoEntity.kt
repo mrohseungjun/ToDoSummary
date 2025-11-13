@@ -20,7 +20,9 @@ data class TodoEntity(
     val createdAt: String, // LocalDateTime을 ISO String으로 저장
     val updatedAt: String?,
     val dueDate: String?,
-    val category: String // 카테고리
+    val category: String, // 카테고리
+    val hasReminder: Boolean = false, // 알림 설정 여부
+    val reminderTime: String? = null // 알림 시간
 )
 
 /**
@@ -34,7 +36,9 @@ fun TodoEntity.toDomain(): Todo = Todo(
     createdAt = LocalDateTime.parse(createdAt),
     updatedAt = updatedAt?.let { LocalDateTime.parse(it) },
     dueDate = dueDate?.let { LocalDateTime.parse(it) },
-    category = category
+    category = category,
+    hasReminder = hasReminder,
+    reminderTime = reminderTime?.let { LocalDateTime.parse(it) }
 )
 
 /**
@@ -48,5 +52,7 @@ fun Todo.toEntity(): TodoEntity = TodoEntity(
     createdAt = createdAt.toString(),
     updatedAt = updatedAt?.toString(),
     dueDate = dueDate?.toString(),
-    category = category
+    category = category,
+    hasReminder = hasReminder,
+    reminderTime = reminderTime?.toString()
 )

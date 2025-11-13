@@ -56,7 +56,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.todosummer.core.common.localization.stringResource
 import com.example.todosummer.core.domain.model.Priority
 import com.example.todosummer.core.domain.model.Todo
 import kotlinx.datetime.Clock
@@ -65,7 +64,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import org.koin.core.logger.Logger
+import kotlin.time.Duration
 
 /**
  * Todo 항목을 추가하거나 편집하는 화면
@@ -89,11 +88,31 @@ fun TodoEditScreen(
     
     // 추가 옵션 상태
     var dueDate by remember(todo) { mutableStateOf<LocalDateTime?>(todo?.dueDate) }
+    var hasReminder by remember(todo) { mutableStateOf(todo?.hasReminder ?: false) }
+    
     LaunchedEffect(todo?.id) {
-        println("[TodoEdit] Loaded todo id=${todo?.id} dueDate=${dueDate}")
+        println("[TodoEdit] Loaded todo: id=${todo?.id}, dueDate=${todo?.dueDate}, hasReminder=${todo?.hasReminder}, reminderTime=${todo?.reminderTime}")
     }
-    var hasReminder by remember { mutableStateOf(false) }
-    var reminderTime by remember { mutableStateOf("마감 10분 전") }
+    
+    // 기존 알림 시간에서 분 단위 계산
+    var reminderMinutesBefore by remember(todo) {
+        mutableStateOf(
+            if (todo?.hasReminder == true) {
+                val todoReminderTime = todo.reminderTime
+                val todoDueDate = todo.dueDate
+                if (todoReminderTime != null && todoDueDate != null) {
+                    val dueDateInstant = todoDueDate.toInstant(TimeZone.currentSystemDefault())
+                    val reminderInstant = todoReminderTime.toInstant(TimeZone.currentSystemDefault())
+                    val diffMillis = dueDateInstant.toEpochMilliseconds() - reminderInstant.toEpochMilliseconds()
+                    (diffMillis / 60000).toInt() // 밀리초를 분으로 변환
+                } else {
+                    10 // 기본값
+                }
+            } else {
+                10 // 기본값
+            }
+        )
+    }
     var repeatOption by remember { mutableStateOf("안 함") }
     
     var showAddCategoryDialog by remember { mutableStateOf(false) }
@@ -172,14 +191,18 @@ fun TodoEditScreen(
                     )
                 }
                 
-                TextButton(onClick = { showAddCategoryDialog = true }) {
+                // 카테고리 추가 버튼 (최대 10개 제한)
+                TextButton(
+                    onClick = { showAddCategoryDialog = true },
+                    enabled = categories.size < 10
+                ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "카테고리 추가",
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("추가")
+                    Text(if (categories.size >= 10) "최대 10개" else "추가")
                 }
             }
             
@@ -226,6 +249,15 @@ fun TodoEditScreen(
             Button(
                 onClick = {
                     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                    
+                    // 알림 시간 계산 (마감일이 있고 알림이 활성화된 경우)
+                    val calculatedReminderTime = if (hasReminder && dueDate != null) {
+                        // 마감일에서 reminderMinutesBefore 분 전
+                        val dueDateInstant = dueDate!!.toInstant(TimeZone.currentSystemDefault())
+                        val reminderInstant = dueDateInstant.minus(Duration.parse("${reminderMinutesBefore}m"))
+                        reminderInstant.toLocalDateTime(TimeZone.currentSystemDefault())
+                    } else null
+                    
                     val newTodo = Todo(
                         id = todo?.id ?: "",
                         title = title,
@@ -234,9 +266,11 @@ fun TodoEditScreen(
                         updatedAt = if (isEditing) now else null,
                         dueDate = dueDate,
                         priority = priority,
-                        category = selectedCategory
+                        category = selectedCategory,
+                        hasReminder = hasReminder && dueDate != null, // 마감일이 있을 때만 알림 활성화
+                        reminderTime = calculatedReminderTime
                     )
-                    println("[TodoEdit] Saving todo id=${newTodo.id.ifEmpty { "<new>" }} dueDate=${newTodo.dueDate}")
+                    println("[TodoEdit] Saving todo id=${newTodo.id.ifEmpty { "<new>" }} dueDate=${newTodo.dueDate} hasReminder=${newTodo.hasReminder} reminderTime=${newTodo.reminderTime}")
                     onSave(newTodo)
                 },
                 enabled = title.isNotBlank(),
@@ -348,12 +382,12 @@ fun TodoEditScreen(
             priority = priority,
             dueDate = dueDate,
             hasReminder = hasReminder,
-            reminderTime = reminderTime,
+            reminderMinutesBefore = reminderMinutesBefore,
             repeatOption = repeatOption,
             onPriorityChange = { priority = it },
             onDueDateChange = { dueDate = it },
             onReminderChange = { hasReminder = it },
-            onReminderTimeChange = { reminderTime = it },
+            onReminderMinutesChange = { reminderMinutesBefore = it },
             onRepeatChange = { repeatOption = it },
             onDismiss = { showAdvancedOptions = false },
             onConfirm = { showAdvancedOptions = false }
@@ -367,17 +401,18 @@ private fun AdvancedOptionsDialog(
     priority: Priority,
     dueDate: LocalDateTime?,
     hasReminder: Boolean,
-    reminderTime: String,
+    reminderMinutesBefore: Int,
     repeatOption: String,
     onPriorityChange: (Priority) -> Unit,
     onDueDateChange: (LocalDateTime?) -> Unit,
     onReminderChange: (Boolean) -> Unit,
-    onReminderTimeChange: (String) -> Unit,
+    onReminderMinutesChange: (Int) -> Unit,
     onRepeatChange: (String) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
+    var showReminderTimePicker by remember { mutableStateOf(false) }
     
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
@@ -416,9 +451,7 @@ private fun AdvancedOptionsDialog(
             
             // 알림
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -426,26 +459,44 @@ private fun AdvancedOptionsDialog(
                     Icon(
                         imageVector = Icons.Default.Notifications,
                         contentDescription = "알림",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = if (dueDate != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = "알림",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Column {
+                        Text(
+                            text = "알림",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        if (dueDate == null) {
+                            Text(
+                                text = "마감일을 먼저 설정하세요",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                 }
                 Switch(
                     checked = hasReminder,
-                    onCheckedChange = onReminderChange
+                    onCheckedChange = onReminderChange,
+                    enabled = dueDate != null
                 )
             }
             
-            if (hasReminder) {
+            if (hasReminder && dueDate != null) {
                 OptionItem(
                     icon = null,
                     title = "알림 시간",
-                    subtitle = reminderTime,
-                    onClick = { /* 알림 시간 선택 */ },
+                    subtitle = when (reminderMinutesBefore) {
+                        0 -> "마감 시간"
+                        5 -> "5분 전"
+                        10 -> "10분 전"
+                        15 -> "15분 전"
+                        30 -> "30분 전"
+                        60 -> "1시간 전"
+                        else -> "${reminderMinutesBefore}분 전"
+                    },
+                    onClick = { showReminderTimePicker = true },
                     modifier = Modifier.padding(start = 40.dp)
                 )
             }
@@ -547,6 +598,58 @@ private fun AdvancedOptionsDialog(
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+    
+    // 알림 시간 선택 다이얼로그
+    if (showReminderTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showReminderTimePicker = false },
+            title = { Text("알림 시간 선택") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val options = listOf(
+                        0 to "마감 시간",
+                        5 to "5분 전",
+                        10 to "10분 전",
+                        15 to "15분 전",
+                        30 to "30분 전",
+                        60 to "1시간 전"
+                    )
+                    
+                    options.forEach { (minutes, label) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onReminderMinutesChange(minutes)
+                                    showReminderTimePicker = false
+                                }
+                                .padding(vertical = 12.dp, horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            androidx.compose.material3.RadioButton(
+                                selected = reminderMinutesBefore == minutes,
+                                onClick = {
+                                    onReminderMinutesChange(minutes)
+                                    showReminderTimePicker = false
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showReminderTimePicker = false }) {
+                    Text("확인")
+                }
+            },
+            shape = RoundedCornerShape(20.dp)
+        )
     }
 }
 

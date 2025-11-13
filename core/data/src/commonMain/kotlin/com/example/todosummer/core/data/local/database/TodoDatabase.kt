@@ -25,7 +25,7 @@ import kotlinx.datetime.toLocalDateTime
 @ConstructedBy(TodoDatabaseConstructor::class) // Non-Android 타겟에서 필요
 @Database(
     entities = [TodoEntity::class, CategoryEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 abstract class TodoDatabase : RoomDatabase() {
@@ -111,6 +111,24 @@ abstract class TodoDatabase : RoomDatabase() {
                 """.trimIndent())
             }
         }
+        
+        /**
+         * 버전 4 -> 5 마이그레이션
+         * todos 테이블에 알림 관련 컬럼 추가
+         */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(connection: SQLiteConnection) {
+                // hasReminder 컬럼 추가 (기본값 false)
+                connection.execSQL("""
+                    ALTER TABLE todos ADD COLUMN hasReminder INTEGER NOT NULL DEFAULT 0
+                """.trimIndent())
+                
+                // reminderTime 컬럼 추가 (NULL 허용)
+                connection.execSQL("""
+                    ALTER TABLE todos ADD COLUMN reminderTime TEXT
+                """.trimIndent())
+            }
+        }
     }
 }
 
@@ -134,7 +152,8 @@ fun createTodoDatabase(): TodoDatabase {
         .addMigrations(
             TodoDatabase.MIGRATION_1_2,
             TodoDatabase.MIGRATION_2_3,
-            TodoDatabase.MIGRATION_3_4
+            TodoDatabase.MIGRATION_3_4,
+            TodoDatabase.MIGRATION_4_5
         )
         .build()
 }

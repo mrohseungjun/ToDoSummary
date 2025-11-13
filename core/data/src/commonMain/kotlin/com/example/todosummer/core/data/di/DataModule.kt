@@ -8,8 +8,10 @@ import com.example.todosummer.core.data.repository.CategoryRepositoryImpl
 import com.example.todosummer.core.data.source.TodoDataSource
 import com.example.todosummer.core.data.preferences.UserPreferencesRepository
 import com.example.todosummer.core.data.preferences.createDataStore
+import com.example.todosummer.core.data.notification.createNotificationScheduler
 import com.example.todosummer.core.domain.repository.TodoRepository
 import com.example.todosummer.core.domain.repository.CategoryRepository
+import com.example.todosummer.core.domain.notification.NotificationScheduler
 import org.koin.dsl.module
 
 val dataModule = module {
@@ -28,4 +30,7 @@ val dataModule = module {
     // DataStore & Preferences
     single { createDataStore() }
     single { UserPreferencesRepository(get()) }
+    
+    // Notification
+    single<NotificationScheduler> { createNotificationScheduler() }
 }
