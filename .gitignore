@@ -87,3 +87,6 @@ lint/tmp/
 *.mobileprovision
 *.hmap
 *.ipa
+
+# iOS Info.plist (contains API keys)
+iosApp/iosApp/Info.plist
