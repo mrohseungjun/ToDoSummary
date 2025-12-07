@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -58,7 +59,11 @@ fun TodoItem(
     onToggleCompletion: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isSelectionMode: Boolean = false,
+    isSelected: Boolean = false,
+    onSelectionToggle: () -> Unit = {},
+    isPastItem: Boolean = false
 ) {
     val strings = stringResource()
     var showMenu by remember { mutableStateOf(false) }
@@ -80,17 +85,37 @@ fun TodoItem(
     val categoryBgColor = todoColors.accent
     val categoryTextColor = todoColors.onAccent
     
+    // 선택 모드일 때 테두리 색상 변경
+    val borderColor = if (isSelectionMode && isSelected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+    }
+    
+    val borderWidth = if (isSelectionMode && isSelected) 2.dp else 1.dp
+
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .then(
+                if (isSelectionMode) {
+                    Modifier.clickable { onSelectionToggle() }
+                } else {
+                    Modifier
+                }
+            )
             .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                width = borderWidth,
+                color = borderColor,
                 shape = RoundedCornerShape(16.dp)
             ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = cardColor
+            containerColor = if (isSelectionMode && isSelected) {
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            } else {
+                cardColor
+            }
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 0.dp,
@@ -98,120 +123,155 @@ fun TodoItem(
         )
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 완료 체크박스
-            Checkbox(
-                checked = todo.isCompleted,
-                onCheckedChange = { onToggleCompletion() }
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            // Todo 내용
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // 우선순위 표시
-                    PriorityIndicator(priority = todo.priority)
-                    
-                    Spacer(modifier = Modifier.width(8.dp))
-                    
-                    // 카테고리 배지
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                color = categoryBgColor,
-                                shape = RoundedCornerShape(6.dp)
-                            )
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = todo.category,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = categoryTextColor
+            // 선택 모드일 때: 왼쪽 세로 컬러 바
+            if (isSelectionMode && isSelected) {
+                Box(
+                    modifier = Modifier
+                        .width(6.dp)
+                        .height(80.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp)
                         )
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Text(
-                    text = todo.title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    textDecoration = if (todo.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
-                    color = titleColor,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
                 )
             }
             
-            // 더보기 메뉴 버튼
-            Box {
-                IconButton(
-                    onClick = { showMenu = true }
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 완료 체크박스 (항상 표시)
+                Checkbox(
+                    checked = todo.isCompleted,
+                    onCheckedChange = { onToggleCompletion() }
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Todo 내용
+                Column(
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "더보기",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // 우선순위 표시
+                        PriorityIndicator(priority = todo.priority)
+                        
+                        // 카테고리 배지
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    color = categoryBgColor,
+                                    shape = RoundedCornerShape(6.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = todo.category,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = categoryTextColor
+                            )
+                        }
+                        
+                        // 이전 항목 라벨
+                        if (isPastItem) {
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        color = MaterialTheme.colorScheme.errorContainer,
+                                        shape = RoundedCornerShape(6.dp)
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = strings.previousItem,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = todo.title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        textDecoration = if (todo.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
+                        color = titleColor,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
                 
-                // 드롭다운 메뉴
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false },
-                    modifier = Modifier.background(
-                        MaterialTheme.colorScheme.surface,
-                        RoundedCornerShape(12.dp)
-                    )
-                ) {
-                    DropdownMenuItem(
-                        text = { 
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "수정하기",
-                                    modifier = Modifier.size(20.dp),
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text("수정하기")
+                // 더보기 메뉴 버튼
+                Box {
+                    IconButton(
+                        onClick = { showMenu = true }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "더보기",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    // 드롭다운 메뉴
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                        modifier = Modifier.background(
+                            MaterialTheme.colorScheme.surface,
+                            RoundedCornerShape(12.dp)
+                        )
+                    ) {
+                        DropdownMenuItem(
+                            text = { 
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "수정하기",
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text("수정하기")
+                                }
+                            },
+                            onClick = {
+                                showMenu = false
+                                onEdit()
                             }
-                        },
-                        onClick = {
-                            showMenu = false
-                            onEdit()
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { 
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "삭제하기",
-                                    modifier = Modifier.size(20.dp),
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    "삭제하기",
-                                    color = MaterialTheme.colorScheme.error
-                                )
+                        )
+                        DropdownMenuItem(
+                            text = { 
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "삭제하기",
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        "삭제하기",
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            },
+                            onClick = {
+                                showMenu = false
+                                onDelete()
                             }
-                        },
-                        onClick = {
-                            showMenu = false
-                            onDelete()
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }

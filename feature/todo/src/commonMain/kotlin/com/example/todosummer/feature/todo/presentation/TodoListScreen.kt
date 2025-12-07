@@ -20,17 +20,31 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material3.AlertDialog
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,6 +53,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -81,38 +96,96 @@ fun TodoListScreen(
 
     var showAddEditDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showBulkDeleteDialog by remember { mutableStateOf(false) }
     var currentTodo by remember { mutableStateOf<Todo?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
     val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()) }
+    
+    // 선택 모드 상태
+    var isSelectionMode by remember { mutableStateOf(false) }
+    val selectedIds = state.selectedIds
     
     // 선택된 날짜 (null이면 오늘)
     val selectedDate = state.selectedDate ?: today.date
     
-    // 날짜별 필터링된 Todo 목록 (마감일 고려)
-    val filteredTodos = remember(state.todos, selectedDate, today.date) {
-        state.todos.filter { todo ->
-            val todoDate = todo.createdAt.date
-            val todoDueDate = todo.dueDate?.date
-            val isToday = selectedDate == today.date
-            val isPast = selectedDate < today.date
-            
-            when {
-                // 오늘: 오늘 생성된 Todo + 과거에 생성된 미완료 Todo + 오늘이 마감일인 Todo
-                isToday -> {
-                    (todoDate == selectedDate) || 
-                    (todoDate < selectedDate && !todo.isCompleted) ||
-                    (todoDueDate == selectedDate)
-                }
+    // 날짜별 필터링 + 정렬/필터 + 검색 적용된 Todo 목록
+    val filteredTodos = remember(
+        state.todos,
+        selectedDate,
+        today.date,
+        state.sortType,
+        state.filterType,
+        state.filterCategory,
+        searchQuery
+    ) {
+        state.todos
+            // 1. 날짜 필터링
+            .filter { todo ->
+                val todoDate = todo.createdAt.date
+                val todoDueDate = todo.dueDate?.date
+                val isToday = selectedDate == today.date
+                val isPast = selectedDate < today.date
                 
-                // 과거: 해당 날짜에 생성된 Todo (완료 여부 무관)
-                isPast -> {
-                    todoDate == selectedDate
+                // 완료된 항목: 완료한 날(updatedAt) 또는 생성일이 선택된 날짜와 같을 때만 표시
+                // 하루 지나면 안 보임
+                if (todo.isCompleted) {
+                    val completedDate = todo.updatedAt?.date ?: todoDate
+                    return@filter completedDate == selectedDate || todoDate == selectedDate
                 }
-                
-                // 미래: 해당 날짜에 생성되거나 마감일인 Todo
-                else -> {
-                    todoDate == selectedDate || todoDueDate == selectedDate
+
+                when {
+                    isToday -> {
+                        // 오늘: 오늘 생성 + 이전 미완료 + 마감일이 오늘
+                        (todoDate == selectedDate) ||
+                        (todoDate < selectedDate) ||
+                        (todoDueDate == selectedDate)
+                    }
+                    isPast -> todoDate == selectedDate
+                    else -> todoDate == selectedDate || todoDueDate == selectedDate
                 }
             }
+            // 2. 완료/미완료 필터
+            .filter { todo ->
+                when (state.filterType) {
+                    FilterType.ALL -> true
+                    FilterType.COMPLETED -> todo.isCompleted
+                    FilterType.INCOMPLETE -> !todo.isCompleted
+                }
+            }
+            // 3. 카테고리 필터
+            .filter { todo ->
+                state.filterCategory?.let { todo.category == it } ?: true
+            }
+            // 4. 검색 필터
+            .filter { todo ->
+                if (searchQuery.isBlank()) {
+                    true
+                } else {
+                    val q = searchQuery.lowercase()
+                    todo.title.lowercase().contains(q) ||
+                        todo.category.lowercase().contains(q)
+                }
+            }
+            // 5. 정렬
+            .let { list ->
+                when (state.sortType) {
+                    SortType.CREATED_AT -> list.sortedByDescending { it.createdAt }
+                    SortType.DUE_DATE -> list.sortedBy { it.dueDate ?: kotlinx.datetime.LocalDateTime(9999, 12, 31, 23, 59) }
+                    SortType.PRIORITY -> list.sortedByDescending { it.priority.ordinal }
+                    SortType.TITLE -> list.sortedBy { it.title.lowercase() }
+                }
+            }
+    }
+    
+    // 이전 날짜 항목 ID 목록 (오늘 화면에서 "이전 항목" 표시용)
+    val pastTodoIds = remember(filteredTodos, selectedDate, today.date) {
+        if (selectedDate == today.date) {
+            filteredTodos
+                .filter { it.createdAt.date < today.date && !it.isCompleted }
+                .map { it.id }
+                .toSet()
+        } else {
+            emptySet()
         }
     }
 
@@ -122,11 +195,158 @@ fun TodoListScreen(
             .background(MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // 상단 날짜 네비게이션 바
-            DateNavigationBar(
-                dateText = "${selectedDate.monthNumber}월 ${selectedDate.dayOfMonth}일",
-                onPreviousDay = { viewModel.onIntent(TodoIntent.NavigateToPreviousDate) },
-                onNextDay = { viewModel.onIntent(TodoIntent.NavigateToNextDate) }
+            // 선택 모드 표시 바
+            if (isSelectionMode) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .padding(horizontal = Dimens.spacing16, vertical = Dimens.spacing12),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Checklist,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = strings.selectionMode,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        if (selectedIds.isNotEmpty()) {
+                            Text(
+                                text = "(${selectedIds.size}${strings.itemsSelected})",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                    
+                    TextButton(
+                        onClick = {
+                            isSelectionMode = false
+                            viewModel.onIntent(TodoIntent.ClearSelection)
+                        }
+                    ) {
+                        Text(
+                            text = strings.cancel,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+            
+            // 상단 날짜 네비게이션 바 + 오늘 버튼 + 선택 모드 버튼
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = Dimens.spacing8),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 날짜 네비게이션
+                DateNavigationBar(
+                    dateText = "${selectedDate.monthNumber}월 ${selectedDate.dayOfMonth}일",
+                    onPreviousDay = { viewModel.onIntent(TodoIntent.NavigateToPreviousDate) },
+                    onNextDay = { viewModel.onIntent(TodoIntent.NavigateToNextDate) },
+                    modifier = Modifier.weight(1f)
+                )
+                
+                // 오늘 버튼 (오늘이 아닐 때만 표시)
+                if (selectedDate != today.date) {
+                    TextButton(
+                        onClick = { viewModel.onIntent(TodoIntent.NavigateToToday) }
+                    ) {
+                        Text(
+                            text = strings.today,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                
+                // 선택 모드 토글 버튼
+                IconButton(
+                    onClick = {
+                        isSelectionMode = !isSelectionMode
+                        if (!isSelectionMode) {
+                            viewModel.onIntent(TodoIntent.ClearSelection)
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Checklist,
+                        contentDescription = strings.selectionMode,
+                        tint = if (isSelectionMode) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+                }
+            }
+
+            // 정렬/필터 바
+            SortFilterBar(
+                sortType = state.sortType,
+                filterType = state.filterType,
+                filterCategory = state.filterCategory,
+                categories = state.categories.map { it.name },
+                onSortTypeChange = { viewModel.onIntent(TodoIntent.SetSortType(it)) },
+                onFilterTypeChange = { viewModel.onIntent(TodoIntent.SetFilterType(it)) },
+                onFilterCategoryChange = { viewModel.onIntent(TodoIntent.SetFilterCategory(it)) }
+            )
+
+            // 검색 바
+            TextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = {
+                    Text(
+                        text = strings.searchPlaceholder,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.spacing16, vertical = Dimens.spacing8),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    cursorColor = MaterialTheme.colorScheme.primary
+                )
             )
 
             if (state.isLoading) {
@@ -151,25 +371,54 @@ fun TodoListScreen(
                             currentTodo = it
                             showDeleteDialog = true
                         },
-                        onOpenStatistics = onOpenStatistics
+                        onOpenStatistics = onOpenStatistics,
+                        isSelectionMode = isSelectionMode,
+                        selectedIds = selectedIds,
+                        onSelectionToggle = { todo ->
+                            viewModel.onIntent(TodoIntent.ToggleSelection(todo.id))
+                        },
+                        pastTodoIds = pastTodoIds
                     )
                 }
             }
         }
 
-        // FAB
-        AppFab(
-            icon = AppIcons.Add,
-            contentDescription = strings.addTodo,
-            onClick = {
-                currentTodo = null
-                showAddEditDialog = true
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(Dimens.spacing16)
-                .navigationBarsPadding()
-        )
+        // FAB (선택 모드가 아닐 때만 표시)
+        if (!isSelectionMode) {
+            AppFab(
+                icon = AppIcons.Add,
+                contentDescription = strings.addTodo,
+                onClick = {
+                    currentTodo = null
+                    showAddEditDialog = true
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(Dimens.spacing16)
+                    .navigationBarsPadding()
+            )
+        }
+        
+        // 일괄 작업 바 (선택 모드일 때 하단에 표시)
+        AnimatedVisibility(
+            visible = isSelectionMode && selectedIds.isNotEmpty(),
+            enter = slideInVertically(initialOffsetY = { it }),
+            exit = slideOutVertically(targetOffsetY = { it }),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            BulkActionBar(
+                selectedCount = selectedIds.size,
+                onCompleteAll = {
+                    viewModel.onIntent(TodoIntent.CompleteSelected)
+                    isSelectionMode = false
+                },
+                onDeleteAll = { showBulkDeleteDialog = true },
+                onCancel = {
+                    viewModel.onIntent(TodoIntent.ClearSelection)
+                    isSelectionMode = false
+                }
+            )
+        }
     }
 
     // 할 일 추가/편집: 바텀 시트 표시
@@ -237,6 +486,47 @@ fun TodoListScreen(
             containerColor = MaterialTheme.colorScheme.surface
         )
     }
+    
+    // 일괄 삭제 확인 다이얼로그
+    if (showBulkDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showBulkDeleteDialog = false },
+            title = { 
+                Text(
+                    text = "${selectedIds.size}개 항목을 삭제하시겠습니까?",
+                    style = MaterialTheme.typography.titleLarge
+                ) 
+            },
+            text = { 
+                Text(
+                    text = "선택한 모든 할 일이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ) 
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.onIntent(TodoIntent.DeleteSelected)
+                        showBulkDeleteDialog = false
+                        isSelectionMode = false
+                    }
+                ) {
+                    Text(
+                        text = "삭제",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showBulkDeleteDialog = false }) {
+                    Text("취소")
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
 }
 
 /**
@@ -250,7 +540,11 @@ fun TodoList(
     onDelete: (Todo) -> Unit,
     onOpenStatistics: () -> Unit = {},
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues()
+    contentPadding: PaddingValues = PaddingValues(),
+    isSelectionMode: Boolean = false,
+    selectedIds: Set<String> = emptySet(),
+    onSelectionToggle: (Todo) -> Unit = {},
+    pastTodoIds: Set<String> = emptySet()
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
@@ -258,7 +552,7 @@ fun TodoList(
             top = Dimens.spacing16,
             start = Dimens.spacing16,
             end = Dimens.spacing16,
-            bottom = Dimens.spacing16
+            bottom = if (isSelectionMode && selectedIds.isNotEmpty()) 80.dp else Dimens.spacing16
         )
     ) {
         items(items = todos, key = { it.id }) { todo ->
@@ -267,7 +561,11 @@ fun TodoList(
                 onToggleCompletion = { onToggleCompletion(todo) },
                 onEdit = { onEdit(todo) },
                 onDelete = { onDelete(todo) },
-                modifier = Modifier.padding(bottom = Dimens.spacing12)
+                modifier = Modifier.padding(bottom = Dimens.spacing12),
+                isSelectionMode = isSelectionMode,
+                isSelected = selectedIds.contains(todo.id),
+                onSelectionToggle = { onSelectionToggle(todo) },
+                isPastItem = pastTodoIds.contains(todo.id)
             )
         }
     }
@@ -335,19 +633,6 @@ fun DateNavigationBarPreview() {
         onPreviousDay = {},
         onNextDay = {}
     )
-}
-
-fun getDayOfWeekKorean(dayOfWeek: String): String {
-    return when (dayOfWeek.uppercase()) {
-        "MONDAY" -> "월요일"
-        "TUESDAY" -> "화요일"
-        "WEDNESDAY" -> "수요일"
-        "THURSDAY" -> "목요일"
-        "FRIDAY" -> "금요일"
-        "SATURDAY" -> "토요일"
-        "SUNDAY" -> "일요일"
-        else -> dayOfWeek
-    }
 }
 
 @Composable
@@ -481,4 +766,261 @@ fun EmptyStatePreview() {
 @Composable
 fun TodoListRoutePreview() {
     TodoListRoute(onOpenStatistics = {})
+}
+
+/**
+ * 정렬/필터 드롭다운 바
+ */
+@Composable
+private fun SortFilterBar(
+    sortType: SortType,
+    filterType: FilterType,
+    filterCategory: String?,
+    categories: List<String>,
+    onSortTypeChange: (SortType) -> Unit,
+    onFilterTypeChange: (FilterType) -> Unit,
+    onFilterCategoryChange: (String?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val strings = stringResource()
+    var showSortMenu by remember { mutableStateOf(false) }
+    var showFilterMenu by remember { mutableStateOf(false) }
+    var showCategoryMenu by remember { mutableStateOf(false) }
+    
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = Dimens.spacing16, vertical = Dimens.spacing8),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.spacing8)
+    ) {
+        // 정렬 드롭다운
+        Box {
+            FilterChip(
+                selected = sortType != SortType.CREATED_AT,
+                onClick = { showSortMenu = true },
+                label = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = when (sortType) {
+                                SortType.CREATED_AT -> strings.sortCreatedAt
+                                SortType.DUE_DATE -> strings.sortDueDate
+                                SortType.PRIORITY -> strings.sortPriority
+                                SortType.TITLE -> strings.sortTitle
+                            },
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            )
+            DropdownMenu(
+                expanded = showSortMenu,
+                onDismissRequest = { showSortMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(strings.sortCreatedAt) },
+                    onClick = {
+                        onSortTypeChange(SortType.CREATED_AT)
+                        showSortMenu = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(strings.sortDueDate) },
+                    onClick = {
+                        onSortTypeChange(SortType.DUE_DATE)
+                        showSortMenu = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(strings.sortPriority) },
+                    onClick = {
+                        onSortTypeChange(SortType.PRIORITY)
+                        showSortMenu = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(strings.sortTitle) },
+                    onClick = {
+                        onSortTypeChange(SortType.TITLE)
+                        showSortMenu = false
+                    }
+                )
+            }
+        }
+        
+        // 완료/미완료 필터 드롭다운
+        Box {
+            FilterChip(
+                selected = filterType != FilterType.ALL,
+                onClick = { showFilterMenu = true },
+                label = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = when (filterType) {
+                                FilterType.ALL -> strings.filterAll
+                                FilterType.COMPLETED -> strings.filterCompleted
+                                FilterType.INCOMPLETE -> strings.filterIncomplete
+                            },
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            )
+            DropdownMenu(
+                expanded = showFilterMenu,
+                onDismissRequest = { showFilterMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(strings.filterAll) },
+                    onClick = {
+                        onFilterTypeChange(FilterType.ALL)
+                        showFilterMenu = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(strings.filterCompleted) },
+                    onClick = {
+                        onFilterTypeChange(FilterType.COMPLETED)
+                        showFilterMenu = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(strings.filterIncomplete) },
+                    onClick = {
+                        onFilterTypeChange(FilterType.INCOMPLETE)
+                        showFilterMenu = false
+                    }
+                )
+            }
+        }
+        
+        // 카테고리 필터 드롭다운
+        if (categories.isNotEmpty()) {
+            Box {
+                FilterChip(
+                    selected = filterCategory != null,
+                    onClick = { showCategoryMenu = true },
+                    label = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = filterCategory ?: strings.filterCategory,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                )
+                DropdownMenu(
+                    expanded = showCategoryMenu,
+                    onDismissRequest = { showCategoryMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(strings.filterAll) },
+                        onClick = {
+                            onFilterCategoryChange(null)
+                            showCategoryMenu = false
+                        }
+                    )
+                    categories.forEach { category ->
+                        DropdownMenuItem(
+                            text = { Text(category) },
+                            onClick = {
+                                onFilterCategoryChange(category)
+                                showCategoryMenu = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 일괄 작업 바 - 선택된 항목에 대한 완료/삭제 버튼
+ */
+@Composable
+private fun BulkActionBar(
+    selectedCount: Int,
+    onCompleteAll: () -> Unit,
+    onDeleteAll: () -> Unit,
+    onCancel: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(horizontal = Dimens.spacing16, vertical = Dimens.spacing12)
+            .navigationBarsPadding(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 선택된 개수 표시
+        Text(
+            text = "${selectedCount}개 선택됨",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Dimens.spacing8)
+        ) {
+            // 취소 버튼
+            TextButton(onClick = onCancel) {
+                Text(
+                    text = "취소",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            // 완료 버튼
+            TextButton(onClick = onCompleteAll) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "완료",
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            
+            // 삭제 버튼
+            TextButton(onClick = onDeleteAll) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "삭제",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
+    }
 }

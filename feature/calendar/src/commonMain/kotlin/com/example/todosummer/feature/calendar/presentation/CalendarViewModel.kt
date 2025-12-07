@@ -147,6 +147,51 @@ class CalendarViewModel(
     }
     
     /**
+     * Todo 완료 상태 토글
+     */
+    fun toggleTodoCompletion(todoId: String) {
+        viewModelScope.launch {
+            try {
+                useCases.toggleTodoCompletion(todoId)
+            } catch (e: Exception) {
+                _state.update { 
+                    it.copy(error = "Todo 상태 변경 중 오류가 발생했습니다: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    /**
+     * Todo 수정
+     */
+    fun updateTodo(todo: com.example.todosummer.core.domain.model.Todo) {
+        viewModelScope.launch {
+            try {
+                useCases.updateTodo(todo)
+            } catch (e: Exception) {
+                _state.update { 
+                    it.copy(error = "Todo 수정 중 오류가 발생했습니다: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    /**
+     * Todo 삭제
+     */
+    fun deleteTodo(todoId: String) {
+        viewModelScope.launch {
+            try {
+                useCases.deleteTodo(todoId)
+            } catch (e: Exception) {
+                _state.update { 
+                    it.copy(error = "Todo 삭제 중 오류가 발생했습니다: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    /**
      * 인텐트 기반 액션 처리 (MVI 패턴)
      */
     fun onIntent(intent: CalendarIntent) {
@@ -158,6 +203,9 @@ class CalendarViewModel(
             CalendarIntent.NavigateToNextMonth -> navigateToNextMonth()
             CalendarIntent.NavigateToToday -> navigateToToday()
             is CalendarIntent.AddTodo -> addTodo(intent.date, intent.title, intent.priority, intent.category)
+            is CalendarIntent.ToggleTodoCompletion -> toggleTodoCompletion(intent.todoId)
+            is CalendarIntent.UpdateTodo -> updateTodo(intent.todo)
+            is CalendarIntent.DeleteTodo -> deleteTodo(intent.todoId)
         }
     }
 }

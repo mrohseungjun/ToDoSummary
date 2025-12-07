@@ -49,7 +49,6 @@ interface StringResources {
     val statisticsGenerating: String
     val statisticsResult: String
     val statisticsLoadingMessage: String
-    val statisticsLoadModel: String
     val statisticsActivityReport: String
     val statisticsPeriodWeek: String
     val statisticsPeriodMonth: String
@@ -79,6 +78,27 @@ interface StringResources {
     // 네비게이션
     val navHome: String
     val navCalendar: String
+    
+    // 정렬/필터
+    val sortBy: String
+    val filterBy: String
+    val sortCreatedAt: String
+    val sortDueDate: String
+    val sortPriority: String
+    val sortTitle: String
+    val filterAll: String
+    val filterCompleted: String
+    val filterIncomplete: String
+    val filterCategory: String
+    
+    // 검색
+    val searchPlaceholder: String
+    
+    // 날짜 네비게이션
+    val today: String
+    val previousItem: String
+    val selectionMode: String
+    val itemsSelected: String
 }
 
 /**
@@ -126,7 +146,6 @@ class EnglishStringResources : StringResources {
     override val statisticsGenerating: String = "Generating..."
     override val statisticsResult: String = "Statistics Result"
     override val statisticsLoadingMessage: String = "Loading statistics model..."
-    override val statisticsLoadModel: String = "Load statistics model"
     override val statisticsActivityReport: String = "Activity Report"
     override val statisticsPeriodWeek: String = "Week"
     override val statisticsPeriodMonth: String = "Month"
@@ -156,6 +175,27 @@ class EnglishStringResources : StringResources {
     // 네비게이션
     override val navHome: String = "Home"
     override val navCalendar: String = "Calendar"
+    
+    // 정렬/필터
+    override val sortBy: String = "Sort by"
+    override val filterBy: String = "Filter"
+    override val sortCreatedAt: String = "Created"
+    override val sortDueDate: String = "Due Date"
+    override val sortPriority: String = "Priority"
+    override val sortTitle: String = "Title"
+    override val filterAll: String = "All"
+    override val filterCompleted: String = "Completed"
+    override val filterIncomplete: String = "Incomplete"
+    override val filterCategory: String = "Category"
+    
+    // 검색
+    override val searchPlaceholder: String = "Search todos"
+    
+    // 날짜 네비게이션
+    override val today: String = "Today"
+    override val previousItem: String = "Previous"
+    override val selectionMode: String = "Selection Mode"
+    override val itemsSelected: String = "selected"
 }
 
 /**
@@ -203,7 +243,6 @@ class KoreanStringResources : StringResources {
     override val statisticsGenerating: String = "생성 중..."
     override val statisticsResult: String = "통계 결과"
     override val statisticsLoadingMessage: String = "통계 모델을 로드하는 중입니다..."
-    override val statisticsLoadModel: String = "통계 모델 로드하기"
     override val statisticsActivityReport: String = "나의 활동 리포트"
     override val statisticsPeriodWeek: String = "주간"
     override val statisticsPeriodMonth: String = "월간"
@@ -233,6 +272,27 @@ class KoreanStringResources : StringResources {
     // 네비게이션
     override val navHome: String = "홈"
     override val navCalendar: String = "캘린더"
+    
+    // 정렬/필터
+    override val sortBy: String = "정렬"
+    override val filterBy: String = "필터"
+    override val sortCreatedAt: String = "생성일"
+    override val sortDueDate: String = "마감일"
+    override val sortPriority: String = "우선순위"
+    override val sortTitle: String = "제목"
+    override val filterAll: String = "전체"
+    override val filterCompleted: String = "완료"
+    override val filterIncomplete: String = "미완료"
+    override val filterCategory: String = "카테고리"
+    
+    // 검색
+    override val searchPlaceholder: String = "할 일 검색"
+    
+    // 날짜 네비게이션
+    override val today: String = "오늘"
+    override val previousItem: String = "이전"
+    override val selectionMode: String = "선택 모드"
+    override val itemsSelected: String = "개 선택"
 }
 
 /**

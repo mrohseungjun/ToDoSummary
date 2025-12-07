@@ -4,7 +4,6 @@ import com.example.todosummer.core.domain.model.Category
 import com.example.todosummer.core.domain.model.Priority
 import com.example.todosummer.core.domain.model.Todo
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
 
 sealed interface TodoIntent {
     data object Load : TodoIntent
@@ -29,4 +28,17 @@ sealed interface TodoIntent {
     data class SelectDate(val date: LocalDate?) : TodoIntent
     data object NavigateToPreviousDate : TodoIntent
     data object NavigateToNextDate : TodoIntent
+    data object NavigateToToday : TodoIntent
+    
+    // 정렬/필터
+    data class SetSortType(val sortType: SortType) : TodoIntent
+    data class SetFilterType(val filterType: FilterType) : TodoIntent
+    data class SetFilterCategory(val category: String?) : TodoIntent
+    data class UpdateSearchQuery(val query: String) : TodoIntent
+
+    // 멀티 선택
+    data class ToggleSelection(val id: String) : TodoIntent
+    data object ClearSelection : TodoIntent
+    data object CompleteSelected : TodoIntent
+    data object DeleteSelected : TodoIntent
 }

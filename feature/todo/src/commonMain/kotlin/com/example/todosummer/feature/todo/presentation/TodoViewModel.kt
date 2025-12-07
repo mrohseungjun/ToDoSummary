@@ -17,7 +17,10 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import kotlin.random.Random
 
 /**
@@ -206,16 +209,49 @@ class TodoViewModel(
      * 이전 날짜로 이동
      */
     fun navigateToPreviousDate() {
-        val currentDate = _state.value.selectedDate ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        _state.update { it.copy(selectedDate = LocalDate(currentDate.year, currentDate.monthNumber, currentDate.dayOfMonth - 1)) }
+        val currentDate = _state.value.selectedDate
+            ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val previousDate = currentDate.minus(DatePeriod(days = 1))
+        _state.update { it.copy(selectedDate = previousDate) }
     }
     
     /**
      * 다음 날짜로 이동
      */
     fun navigateToNextDate() {
-        val currentDate = _state.value.selectedDate ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        _state.update { it.copy(selectedDate = LocalDate(currentDate.year, currentDate.monthNumber, currentDate.dayOfMonth + 1)) }
+        val currentDate = _state.value.selectedDate
+            ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val nextDate = currentDate.plus(DatePeriod(days = 1))
+        _state.update { it.copy(selectedDate = nextDate) }
+    }
+    
+    /**
+     * 오늘 날짜로 이동
+     */
+    fun navigateToToday() {
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        _state.update { it.copy(selectedDate = today) }
+    }
+    
+    /**
+     * 정렬 기준 변경
+     */
+    fun setSortType(sortType: SortType) {
+        _state.update { it.copy(sortType = sortType) }
+    }
+    
+    /**
+     * 필터 기준 변경
+     */
+    fun setFilterType(filterType: FilterType) {
+        _state.update { it.copy(filterType = filterType) }
+    }
+    
+    /**
+     * 카테고리 필터 변경
+     */
+    fun setFilterCategory(category: String?) {
+        _state.update { it.copy(filterCategory = category) }
     }
 
     /**
@@ -237,7 +273,69 @@ class TodoViewModel(
             is TodoIntent.SelectDate -> selectDate(intent.date)
             TodoIntent.NavigateToPreviousDate -> navigateToPreviousDate()
             TodoIntent.NavigateToNextDate -> navigateToNextDate()
+            TodoIntent.NavigateToToday -> navigateToToday()
             TodoIntent.Load -> { /* 초기 수집으로 대체됨 */ }
+            is TodoIntent.SetSortType -> setSortType(intent.sortType)
+            is TodoIntent.SetFilterType -> setFilterType(intent.filterType)
+            is TodoIntent.SetFilterCategory -> setFilterCategory(intent.category)
+
+            // 검색어 변경
+            is TodoIntent.UpdateSearchQuery -> {
+                _state.update { it.copy(searchQuery = intent.query) }
+            }
+
+            // 멀티 선택 토글
+            is TodoIntent.ToggleSelection -> {
+                _state.update { state ->
+                    val current = state.selectedIds
+                    val newSet = if (current.contains(intent.id)) current - intent.id else current + intent.id
+                    state.copy(selectedIds = newSet)
+                }
+            }
+
+            // 선택 해제
+            TodoIntent.ClearSelection -> {
+                _state.update { it.copy(selectedIds = emptySet()) }
+            }
+
+            // 선택 항목 일괄 완료
+            TodoIntent.CompleteSelected -> {
+                val ids = _state.value.selectedIds
+                if (ids.isNotEmpty()) {
+                    viewModelScope.launch {
+                        try {
+                            val currentTodos = _state.value.todos
+                            ids.forEach { id ->
+                                val todo = currentTodos.find { it.id == id } ?: return@forEach
+                                if (!todo.isCompleted) {
+                                    useCases.toggleTodoCompletion(id)
+                                }
+                            }
+                            _state.update { it.copy(selectedIds = emptySet()) }
+                        } catch (e: Exception) {
+                            _state.update { it.copy(error = "일괄 완료 중 오류가 발생했습니다: ${e.message}") }
+                        }
+                    }
+                }
+            }
+
+            // 선택 항목 일괄 삭제
+            TodoIntent.DeleteSelected -> {
+                val ids = _state.value.selectedIds
+                if (ids.isNotEmpty()) {
+                    viewModelScope.launch {
+                        try {
+                            ids.forEach { id ->
+                                notificationScheduler.cancelNotification(id)
+                                useCases.deleteTodo(id)
+                            }
+                            _state.update { it.copy(selectedIds = emptySet()) }
+                        } catch (e: Exception) {
+                            _state.update { it.copy(error = "일괄 삭제 중 오류가 발생했습니다: ${e.message}") }
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -81,13 +82,84 @@ fun CalendarScreen(
 
     }
 
+    // 수정할 Todo 상태
+    var editingTodo by remember { mutableStateOf<Todo?>(null) }
+    // 삭제 확인 다이얼로그
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var todoToDelete by remember { mutableStateOf<Todo?>(null) }
+
     // 바텀시트: 선택된 날짜의 Todo 목록 + 추가 기능
     if (showBottomSheet && selectedDate != null) {
         TodoBottomSheet(
             selectedDate = selectedDate,
             todos = todosForSelectedDate,
             onDismiss = { showBottomSheet = false },
-            onAddTodo = { showAddDialog = true }
+            onAddTodo = { showAddDialog = true },
+            onToggleCompletion = { todoId -> onIntent(CalendarIntent.ToggleTodoCompletion(todoId)) },
+            onTodoClick = { todo -> editingTodo = todo },
+            onDeleteTodo = { todo ->
+                todoToDelete = todo
+                showDeleteDialog = true
+            }
+        )
+    }
+    
+    // 삭제 확인 다이얼로그
+    if (showDeleteDialog && todoToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { 
+                Text(
+                    text = "정말로 삭제하시겠습니까?",
+                    style = MaterialTheme.typography.titleLarge
+                ) 
+            },
+            text = { 
+                Text(
+                    text = "\'${todoToDelete?.title}\' 항목이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ) 
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        todoToDelete?.let { onIntent(CalendarIntent.DeleteTodo(it.id)) }
+                        showDeleteDialog = false
+                        todoToDelete = null
+                    }
+                ) {
+                    Text(
+                        text = "삭제",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showDeleteDialog = false
+                    todoToDelete = null
+                }) {
+                    Text("취소")
+                }
+            },
+            shape = RoundedCornerShape(20.dp),
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
+
+    // Todo 수정 다이얼로그
+    editingTodo?.let { todo ->
+        TodoEditScreen(
+            todo = todo,
+            categories = state.categories.map { it.name },
+            onSave = { updatedTodo ->
+                onIntent(CalendarIntent.UpdateTodo(updatedTodo))
+                editingTodo = null
+            },
+            onAddCategory = { /* 카테고리 추가는 TodoViewModel에서 처리 */ },
+            onDeleteCategory = { /* 카테고리 삭제는 TodoViewModel에서 처리 */ },
+            onCancel = { editingTodo = null }
         )
     }
 
@@ -296,21 +368,24 @@ private fun CalendarDay(
 }
 
 @Composable
-private fun TodoItemInSheet(todo: Todo) {
+private fun TodoItemInSheet(
+    todo: Todo,
+    onToggleCompletion: (String) -> Unit,
+    onTodoClick: (Todo) -> Unit,
+    onDeleteTodo: (Todo) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                color = Color(0xFFBBDEFB).copy(alpha = 0.3f),
-                shape = RoundedCornerShape(12.dp)
-            )
+            .clip(RoundedCornerShape(12.dp))
+            .background(color = Color(0xFFBBDEFB).copy(alpha = 0.3f))
+            .clickable { onTodoClick(todo) }
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
             checked = todo.isCompleted,
-            onCheckedChange = null,
-            enabled = false
+            onCheckedChange = { onToggleCompletion(todo.id) }
         )
         
         Spacer(modifier = Modifier.width(8.dp))
@@ -318,8 +393,26 @@ private fun TodoItemInSheet(todo: Todo) {
         Text(
             text = todo.title,
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            color = if (todo.isCompleted) {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            }
         )
+        
+        // 삭제 버튼
+        IconButton(
+            onClick = { onDeleteTodo(todo) },
+            modifier = Modifier.size(32.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "삭제",
+                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
 
@@ -342,7 +435,10 @@ private fun TodoBottomSheet(
     selectedDate: LocalDate,
     todos: List<Todo>,
     onDismiss: () -> Unit,
-    onAddTodo: () -> Unit
+    onAddTodo: () -> Unit,
+    onToggleCompletion: (String) -> Unit,
+    onTodoClick: (Todo) -> Unit,
+    onDeleteTodo: (Todo) -> Unit
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -388,7 +484,12 @@ private fun TodoBottomSheet(
                     modifier = Modifier.heightIn(max = 400.dp)
                 ) {
                     items(todos) { todo ->
-                        TodoItemInSheet(todo = todo)
+                        TodoItemInSheet(
+                            todo = todo,
+                            onToggleCompletion = onToggleCompletion,
+                            onTodoClick = onTodoClick,
+                            onDeleteTodo = onDeleteTodo
+                        )
                     }
                 }
             }
