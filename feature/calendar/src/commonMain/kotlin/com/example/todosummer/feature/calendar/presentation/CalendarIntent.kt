@@ -16,4 +16,8 @@ sealed interface CalendarIntent {
     data class ToggleTodoCompletion(val todoId: String) : CalendarIntent
     data class UpdateTodo(val todo: com.example.todosummer.core.domain.model.Todo) : CalendarIntent
     data class DeleteTodo(val todoId: String) : CalendarIntent
+    
+    // 카테고리 관련
+    data class AddCategory(val name: String) : CalendarIntent
+    data class DeleteCategory(val name: String) : CalendarIntent
 }

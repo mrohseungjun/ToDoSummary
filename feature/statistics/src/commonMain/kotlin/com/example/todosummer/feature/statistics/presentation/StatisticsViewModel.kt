@@ -2,10 +2,13 @@ package com.example.todosummer.feature.statistics.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.todosummer.core.domain.ai.GeminiService
+import com.example.todosummer.core.domain.model.Todo
 import com.example.todosummer.core.domain.usecase.TodoUseCases
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -18,8 +21,12 @@ import kotlinx.datetime.toLocalDateTime
  * 활동 리포트 통계를 위한 ViewModel
  */
 class StatisticsViewModel(
-    private val useCases: TodoUseCases
+    private val useCases: TodoUseCases,
+    private val geminiService: GeminiService? = null
 ) : ViewModel() {
+    
+    // 현재 필터링된 Todo 목록 캐시
+    private var currentFilteredTodos: List<Todo> = emptyList()
     private val _state = MutableStateFlow(StatisticsState())
     val state: StateFlow<StatisticsState> = _state.asStateFlow()
 
@@ -43,8 +50,10 @@ class StatisticsViewModel(
                         val monthAgo = now.date.minus(30, DateTimeUnit.DAY)
                         todos.filter { it.createdAt.date >= monthAgo }
                     }
-                    StatisticsPeriod.ALL -> todos
                 }
+                
+                // 캐시 저장
+                currentFilteredTodos = filteredTodos
                 
                 // 총 완료
                 val totalCompleted = filteredTodos.count { it.isCompleted }
@@ -97,28 +106,6 @@ class StatisticsViewModel(
                         }.reversed()
                         val labels = listOf("3개월 전", "2개월 전", "1개월 전", "이번 달")
                         data to labels
-                    }
-                    StatisticsPeriod.ALL -> {
-                        // 최근 6개월 총 완료 개수 (정규화)
-                        val monthlyData = (0..5).map { monthOffset ->
-                            val monthStart = now.date.minus(30 * (monthOffset + 1), DateTimeUnit.DAY)
-                            val monthEnd = now.date.minus(30 * monthOffset, DateTimeUnit.DAY)
-                            val monthTodos = todos.filter { 
-                                it.createdAt.date >= monthStart && it.createdAt.date < monthEnd 
-                            }
-                            monthTodos.count { it.isCompleted }.toFloat()
-                        }.reversed()
-                        
-                        // 최대값으로 정규화 (0~1)
-                        val maxCount = monthlyData.maxOrNull() ?: 1f
-                        val normalizedData = if (maxCount > 0) {
-                            monthlyData.map { it / maxCount }
-                        } else {
-                            monthlyData
-                        }
-                        
-                        val labels = listOf("5개월 전", "4개월 전", "3개월 전", "2개월 전", "1개월 전", "이번 달")
-                        normalizedData to labels
                     }
                 }
                 
@@ -191,6 +178,176 @@ class StatisticsViewModel(
                 _state.update { it.copy(period = intent.period) }
                 loadStatistics()
             }
+            StatisticsIntent.GenerateAIReport -> generateAIReport()
+            StatisticsIntent.AnalyzeProcrastination -> analyzeProcrastination()
+            StatisticsIntent.ClearAIReport -> clearAIReport()
+        }
+    }
+    
+    /**
+     * AI 사용 횟수 체크 및 증가
+     */
+    private fun checkAndIncrementAIUsage(): Boolean {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val today = "${now.date.year}-${now.date.monthNumber.toString().padStart(2, '0')}-${now.date.dayOfMonth.toString().padStart(2, '0')}"
+        
+        val currentState = _state.value
+        
+        // 날짜가 바뀌면 카운트 리셋
+        val (newCount, newDate) = if (currentState.lastAIUsageDate != today) {
+            1 to today
+        } else {
+            (currentState.dailyAIUsageCount + 1) to today
+        }
+        
+        // 제한 초과 체크
+        if (newCount > currentState.maxDailyAIUsage) {
+            return false
+        }
+        
+        _state.update { 
+            it.copy(
+                dailyAIUsageCount = newCount,
+                lastAIUsageDate = newDate
+            )
+        }
+        return true
+    }
+    
+    /**
+     * AI 리포트 생성
+     */
+    private fun generateAIReport() {
+        if (geminiService == null) {
+            _state.update { 
+                it.copy(aiReportError = "AI 서비스가 설정되지 않았습니다. API 키를 확인해주세요.")
+            }
+            return
+        }
+        
+        if (currentFilteredTodos.isEmpty()) {
+            _state.update { 
+                it.copy(aiReportError = "분석할 데이터가 없습니다.")
+            }
+            return
+        }
+        
+        // 일일 사용 횟수 체크
+        if (!checkAndIncrementAIUsage()) {
+            _state.update { 
+                it.copy(aiReportError = "오늘의 AI 분석 횟수(${_state.value.maxDailyAIUsage}회)를 모두 사용했습니다.")
+            }
+            return
+        }
+        
+        viewModelScope.launch {
+            _state.update { 
+                it.copy(
+                    isGeneratingAIReport = true,
+                    aiReportError = null
+                )
+            }
+            
+            val periodLabel = when (_state.value.period) {
+                StatisticsPeriod.WEEK -> "주간 (최근 7일)"
+                StatisticsPeriod.MONTH -> "월간 (최근 30일)"
+            }
+            
+            geminiService.generateReport(currentFilteredTodos, periodLabel)
+                .onSuccess { report ->
+                    _state.update {
+                        it.copy(
+                            isGeneratingAIReport = false,
+                            aiReportSummary = report.summary,
+                            aiReportInsights = report.insights,
+                            aiReportActionItems = report.actionItems,
+                            aiReportError = null
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            isGeneratingAIReport = false,
+                            aiReportError = "AI 리포트 생성 실패: ${error.message}"
+                        )
+                    }
+                }
+        }
+    }
+    
+    /**
+     * 미루기 패턴 분석
+     */
+    private fun analyzeProcrastination() {
+        if (geminiService == null) {
+            _state.update { 
+                it.copy(procrastinationError = "AI 서비스가 설정되지 않았습니다. API 키를 확인해주세요.")
+            }
+            return
+        }
+        
+        if (currentFilteredTodos.isEmpty()) {
+            _state.update { 
+                it.copy(procrastinationError = "분석할 데이터가 없습니다.")
+            }
+            return
+        }
+        
+        // 일일 사용 횟수 체크
+        if (!checkAndIncrementAIUsage()) {
+            _state.update { 
+                it.copy(procrastinationError = "오늘의 AI 분석 횟수(${_state.value.maxDailyAIUsage}회)를 모두 사용했습니다.")
+            }
+            return
+        }
+        
+        viewModelScope.launch {
+            _state.update { 
+                it.copy(
+                    isAnalyzingProcrastination = true,
+                    procrastinationError = null
+                )
+            }
+            
+            geminiService.analyzeProcrastination(currentFilteredTodos)
+                .onSuccess { patterns ->
+                    _state.update {
+                        it.copy(
+                            isAnalyzingProcrastination = false,
+                            procrastinationCategories = patterns.frequentCategories,
+                            procrastinationTimeSlots = patterns.frequentTimeSlots,
+                            procrastinationComment = patterns.aiComment,
+                            procrastinationError = null
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            isAnalyzingProcrastination = false,
+                            procrastinationError = "미루기 패턴 분석 실패: ${error.message}"
+                        )
+                    }
+                }
+        }
+    }
+    
+    /**
+     * AI 리포트 초기화
+     */
+    private fun clearAIReport() {
+        _state.update {
+            it.copy(
+                aiReportSummary = "",
+                aiReportInsights = emptyList(),
+                aiReportActionItems = emptyList(),
+                aiReportError = null,
+                procrastinationCategories = emptyList(),
+                procrastinationTimeSlots = emptyList(),
+                procrastinationComment = "",
+                procrastinationError = null
+            )
         }
     }
 }

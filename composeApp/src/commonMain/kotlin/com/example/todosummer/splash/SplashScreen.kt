@@ -24,30 +24,44 @@ fun SplashScreen(
     onSplashFinished: () -> Unit,
     logoPainter: Painter? = null
 ) {
-    var startAnimation by remember { mutableStateOf(false) }
+    // 애니메이션 상태: 0 = 초기, 1 = 페이드인 완료, 2 = 페이드아웃 시작
+    var animationPhase by remember { mutableStateOf(0) }
     
-    // 페이드인 애니메이션
+    // 페이드인/아웃 애니메이션
     val alphaAnim by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0f,
+        targetValue = when (animationPhase) {
+            0 -> 0f      // 초기: 투명
+            1 -> 1f      // 페이드인: 불투명
+            else -> 0f   // 페이드아웃: 투명
+        },
         animationSpec = tween(
-            durationMillis = 1000,
+            durationMillis = if (animationPhase == 2) 500 else 800,
             easing = FastOutSlowInEasing
-        )
+        ),
+        finishedListener = { 
+            if (animationPhase == 2) {
+                onSplashFinished()
+            }
+        }
     )
     
     // 스케일 애니메이션
     val scaleAnim by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0.8f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
+        targetValue = when (animationPhase) {
+            0 -> 0.8f
+            1 -> 1f
+            else -> 1.1f  // 페이드아웃 시 살짝 확대
+        },
+        animationSpec = tween(
+            durationMillis = if (animationPhase == 2) 500 else 800,
+            easing = FastOutSlowInEasing
         )
     )
     
     LaunchedEffect(Unit) {
-        startAnimation = true
-        delay(2000) // 2초 후 메인 화면으로 이동
-        onSplashFinished()
+        animationPhase = 1  // 페이드인 시작
+        delay(1800)         // 1.8초 대기
+        animationPhase = 2  // 페이드아웃 시작
     }
     
     Box(

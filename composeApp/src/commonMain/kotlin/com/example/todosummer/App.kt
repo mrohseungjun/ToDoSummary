@@ -1,5 +1,9 @@
 package com.example.todosummer
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,12 +29,22 @@ fun App() {
     val logoPainter = rememberSplashLogoPainter()
 
     MaterialTheme {
-        if (showSplash) {
+        // 스플래시 화면
+        AnimatedVisibility(
+            visible = showSplash,
+            exit = fadeOut(animationSpec = tween(300))
+        ) {
             SplashScreen(
                 onSplashFinished = { showSplash = false },
                 logoPainter = logoPainter
             )
-        } else {
+        }
+        
+        // 메인 화면
+        AnimatedVisibility(
+            visible = !showSplash,
+            enter = fadeIn(animationSpec = tween(500))
+        ) {
             // 앱 전역 상태
             val preferencesRepository: UserPreferencesRepository = koinInject()
             val appState = remember { MainAppState(preferencesRepository) }

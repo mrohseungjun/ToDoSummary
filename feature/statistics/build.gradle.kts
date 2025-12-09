@@ -7,6 +7,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.core.ui)
             implementation(projects.core.common)
+            implementation(projects.core.domain)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)

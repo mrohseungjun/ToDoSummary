@@ -51,6 +51,8 @@ class UserPreferencesRepository(
         dataStore.edit { preferences ->
             preferences[LANGUAGE_MODE_KEY] = mode.name
         }
+        // Android: SharedPreferences에도 저장 (attachBaseContext에서 사용)
+        persistLanguageMode(mode)
     }
     
     /**

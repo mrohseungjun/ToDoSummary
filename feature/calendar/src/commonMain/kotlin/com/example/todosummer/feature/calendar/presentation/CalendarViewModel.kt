@@ -192,6 +192,43 @@ class CalendarViewModel(
     }
     
     /**
+     * 카테고리 추가
+     */
+    fun addCategory(name: String) {
+        viewModelScope.launch {
+            try {
+                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+                val category = com.example.todosummer.core.domain.model.Category(
+                    id = "",
+                    name = name,
+                    createdAt = now
+                )
+                categoryRepository.addCategory(category)
+            } catch (e: Exception) {
+                _state.update { 
+                    it.copy(error = "카테고리 추가 중 오류가 발생했습니다: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    /**
+     * 카테고리 삭제
+     */
+    fun deleteCategory(name: String) {
+        viewModelScope.launch {
+            try {
+                val category = _state.value.categories.find { it.name == name }
+                category?.let { categoryRepository.deleteCategory(it) }
+            } catch (e: Exception) {
+                _state.update { 
+                    it.copy(error = "카테고리 삭제 중 오류가 발생했습니다: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    /**
      * 인텐트 기반 액션 처리 (MVI 패턴)
      */
     fun onIntent(intent: CalendarIntent) {
@@ -206,6 +243,8 @@ class CalendarViewModel(
             is CalendarIntent.ToggleTodoCompletion -> toggleTodoCompletion(intent.todoId)
             is CalendarIntent.UpdateTodo -> updateTodo(intent.todo)
             is CalendarIntent.DeleteTodo -> deleteTodo(intent.todoId)
+            is CalendarIntent.AddCategory -> addCategory(intent.name)
+            is CalendarIntent.DeleteCategory -> deleteCategory(intent.name)
         }
     }
 }

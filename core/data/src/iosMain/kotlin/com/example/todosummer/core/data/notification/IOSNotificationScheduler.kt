@@ -19,14 +19,24 @@ class IOSNotificationScheduler : NotificationScheduler {
     private val notificationCenter = UNUserNotificationCenter.currentNotificationCenter()
     
     override suspend fun scheduleNotification(todo: Todo): Boolean {
+        println("[iOS Notification] scheduleNotification called for todo: ${todo.title}")
+        println("[iOS Notification] hasReminder=${todo.hasReminder}, reminderTime=${todo.reminderTime}")
+        
         if (!todo.hasReminder) {
+            println("[iOS Notification] SKIP: hasReminder=false")
             return false
         }
 
-        val reminderTime = todo.reminderTime ?: return false
+        val reminderTime = todo.reminderTime ?: run {
+            println("[iOS Notification] SKIP: reminderTime=null")
+            return false
+        }
         
         // 권한 확인
-        if (!hasNotificationPermission()) {
+        val hasPermission = hasNotificationPermission()
+        println("[iOS Notification] hasNotificationPermission=$hasPermission")
+        if (!hasPermission) {
+            println("[iOS Notification] SKIP: No notification permission")
             return false
         }
         
@@ -34,9 +44,14 @@ class IOSNotificationScheduler : NotificationScheduler {
             val reminderTimeMillis = reminderTime.toInstant(TimeZone.currentSystemDefault())
                 .toEpochMilliseconds()
             val currentMillis = Clock.System.now().toEpochMilliseconds()
+            
+            println("[iOS Notification] reminderTimeMillis=$reminderTimeMillis")
+            println("[iOS Notification] currentMillis=$currentMillis")
+            println("[iOS Notification] diff=${reminderTimeMillis - currentMillis}ms (${(reminderTimeMillis - currentMillis) / 1000}s)")
 
             // 현재 시간보다 이전이면 스케줄링하지 않음
             if (reminderTimeMillis <= currentMillis) {
+                println("[iOS Notification] SKIP: reminderTime is in the past!")
                 return false
             }
             
@@ -52,6 +67,8 @@ class IOSNotificationScheduler : NotificationScheduler {
             
             // 트리거 시간 계산 (초 단위)
             val timeInterval = (reminderTimeMillis - currentMillis) / 1000.0
+            println("[iOS Notification] timeInterval=${timeInterval}s")
+            
             val trigger = UNTimeIntervalNotificationTrigger.triggerWithTimeInterval(
                 timeInterval = timeInterval,
                 repeats = false
@@ -67,10 +84,17 @@ class IOSNotificationScheduler : NotificationScheduler {
             // 알림 스케줄링
             return suspendCoroutine { continuation ->
                 notificationCenter.addNotificationRequest(request) { error ->
-                    continuation.resume(error == null)
+                    if (error != null) {
+                        println("[iOS Notification] ERROR: ${error.localizedDescription}")
+                        continuation.resume(false)
+                    } else {
+                        println("[iOS Notification] SUCCESS: Notification scheduled in ${timeInterval}s")
+                        continuation.resume(true)
+                    }
                 }
             }
         } catch (e: Exception) {
+            println("[iOS Notification] ERROR: ${e.message}")
             e.printStackTrace()
             return false
         }

@@ -59,12 +59,19 @@ class AndroidNotificationScheduler(
     }
     
     override suspend fun scheduleNotification(todo: Todo): Boolean {
+        println("[Notification] scheduleNotification called for todo: ${todo.title}")
+        println("[Notification] hasReminder=${todo.hasReminder}, reminderTime=${todo.reminderTime}")
+        
         if (!todo.hasReminder || todo.reminderTime == null) {
+            println("[Notification] SKIP: hasReminder=false or reminderTime=null")
             return false
         }
         
         // 권한 확인
-        if (!hasNotificationPermission()) {
+        val hasPermission = hasNotificationPermission()
+        println("[Notification] hasNotificationPermission=$hasPermission")
+        if (!hasPermission) {
+            println("[Notification] SKIP: No notification permission")
             return false
         }
         
@@ -72,9 +79,15 @@ class AndroidNotificationScheduler(
             val reminderTime = todo.reminderTime ?: return false
             val reminderTimeMillis = reminderTime.toInstant(TimeZone.currentSystemDefault())
                 .toEpochMilliseconds()
+            val currentTimeMillis = System.currentTimeMillis()
+            
+            println("[Notification] reminderTimeMillis=$reminderTimeMillis")
+            println("[Notification] currentTimeMillis=$currentTimeMillis")
+            println("[Notification] diff=${reminderTimeMillis - currentTimeMillis}ms (${(reminderTimeMillis - currentTimeMillis) / 1000}s)")
             
             // 현재 시간보다 이전이면 스케줄링하지 않음
-            if (reminderTimeMillis <= System.currentTimeMillis()) {
+            if (reminderTimeMillis <= currentTimeMillis) {
+                println("[Notification] SKIP: reminderTime is in the past!")
                 return false
             }
             
@@ -106,8 +119,10 @@ class AndroidNotificationScheduler(
                 )
             }
             
+            println("[Notification] SUCCESS: Alarm scheduled for ${java.util.Date(reminderTimeMillis)}")
             return true
         } catch (e: Exception) {
+            println("[Notification] ERROR: ${e.message}")
             e.printStackTrace()
             return false
         }

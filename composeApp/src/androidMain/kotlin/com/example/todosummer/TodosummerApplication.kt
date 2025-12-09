@@ -1,9 +1,13 @@
 package com.example.todosummer
 
 import android.app.Application
+import android.content.Context
+import android.content.res.Configuration
+import com.example.todosummer.core.data.preferences.LanguagePreferences
 import com.example.todosummer.di.appModules
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
+import java.util.Locale
 
 class TodosummerApplication : Application() {
     override fun onCreate() {
@@ -15,5 +19,14 @@ class TodosummerApplication : Application() {
                 modules(appModules())
             }
         }
+    }
+    
+    override fun attachBaseContext(base: Context) {
+        // 앱 내 언어 설정에 따라 Locale 적용
+        val locale = LanguagePreferences.getLocale(base)
+        Locale.setDefault(locale)
+        val config = Configuration(base.resources.configuration)
+        config.setLocale(locale)
+        super.attachBaseContext(base.createConfigurationContext(config))
     }
 }

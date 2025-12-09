@@ -17,7 +17,26 @@ data class StatisticsState(
     val longestStreak: Int = 0,
     val productivityScore: Int = 0,
     val insight: String = "",
-    val error: String? = null
+    val error: String? = null,
+    
+    // AI 리포트 상태
+    val isGeneratingAIReport: Boolean = false,
+    val aiReportSummary: String = "",
+    val aiReportInsights: List<String> = emptyList(),
+    val aiReportActionItems: List<String> = emptyList(),
+    val aiReportError: String? = null,
+    
+    // 미루기 패턴 분석 상태
+    val isAnalyzingProcrastination: Boolean = false,
+    val procrastinationCategories: List<String> = emptyList(),
+    val procrastinationTimeSlots: List<String> = emptyList(),
+    val procrastinationComment: String = "",
+    val procrastinationError: String? = null,
+    
+    // AI 분석 횟수 제한 (하루 3회)
+    val dailyAIUsageCount: Int = 0,
+    val maxDailyAIUsage: Int = 3,
+    val lastAIUsageDate: String = ""  // "yyyy-MM-dd" 형식
 )
 
 /**
@@ -25,6 +44,5 @@ data class StatisticsState(
  */
 enum class StatisticsPeriod {
     WEEK,    // 주간
-    MONTH,   // 월간
-    ALL      // 전체
+    MONTH    // 월간
 }

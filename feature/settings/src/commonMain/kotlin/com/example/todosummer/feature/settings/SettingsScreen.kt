@@ -1,7 +1,6 @@
 package com.example.todosummer.feature.settings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,13 +9,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.todosummer.core.common.localization.LanguageMode
 import com.example.todosummer.core.common.localization.stringResource
 import com.example.todosummer.core.ui.AppIcons
 import com.example.todosummer.core.ui.theme.ThemeMode
+import com.example.todosummer.core.ui.util.rememberRestartActivity
+import com.example.todosummer.core.ui.util.rememberSaveLanguage
 
 /**
  * 앱 설정 화면 (feature/settings)
@@ -31,6 +31,8 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     val strings = stringResource()
+    val restartActivity = rememberRestartActivity()
+    val saveLanguage = rememberSaveLanguage()
 
     Column(
         modifier = modifier
@@ -54,7 +56,13 @@ fun SettingsScreen(
         ) {
             ModernOption(
                 selected = currentLanguage == LanguageMode.ENGLISH,
-                onClick = { onLanguageChange(LanguageMode.ENGLISH) },
+                onClick = { 
+                    if (currentLanguage != LanguageMode.ENGLISH) {
+                        saveLanguage(LanguageMode.ENGLISH)
+                        onLanguageChange(LanguageMode.ENGLISH)
+                        restartActivity()
+                    }
+                },
                 text = "English"
             )
             
@@ -62,7 +70,13 @@ fun SettingsScreen(
             
             ModernOption(
                 selected = currentLanguage == LanguageMode.KOREAN,
-                onClick = { onLanguageChange(LanguageMode.KOREAN) },
+                onClick = { 
+                    if (currentLanguage != LanguageMode.KOREAN) {
+                        saveLanguage(LanguageMode.KOREAN)
+                        onLanguageChange(LanguageMode.KOREAN)
+                        restartActivity()
+                    }
+                },
                 text = "한국어"
             )
         }

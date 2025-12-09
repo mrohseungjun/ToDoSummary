@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.todosummer.core.domain.model.Todo
+import com.example.todosummer.core.ui.toast.rememberToastState
 import com.example.todosummer.feature.todo.presentation.components.TodoEditScreen
 import kotlinx.datetime.*
 
@@ -34,6 +35,9 @@ fun CalendarScreen(
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
+    
+    // Toast 상태
+    val toastState = rememberToastState()
 
     val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val currentMonth = state.currentMonth ?: YearMonth(today.year, today.monthNumber)
@@ -79,7 +83,6 @@ fun CalendarScreen(
                 }
             )
         }
-
     }
 
     // 수정할 Todo 상태
@@ -127,6 +130,7 @@ fun CalendarScreen(
                         todoToDelete?.let { onIntent(CalendarIntent.DeleteTodo(it.id)) }
                         showDeleteDialog = false
                         todoToDelete = null
+                        toastState.show("삭제되었습니다")
                     }
                 ) {
                     Text(
@@ -156,9 +160,10 @@ fun CalendarScreen(
             onSave = { updatedTodo ->
                 onIntent(CalendarIntent.UpdateTodo(updatedTodo))
                 editingTodo = null
+                toastState.show("수정되었습니다")
             },
-            onAddCategory = { /* 카테고리 추가는 TodoViewModel에서 처리 */ },
-            onDeleteCategory = { /* 카테고리 삭제는 TodoViewModel에서 처리 */ },
+            onAddCategory = { categoryName -> onIntent(CalendarIntent.AddCategory(categoryName)) },
+            onDeleteCategory = { categoryName -> onIntent(CalendarIntent.DeleteCategory(categoryName)) },
             onCancel = { editingTodo = null }
         )
     }
@@ -181,9 +186,10 @@ fun CalendarScreen(
                     todoWithDate.category
                 ))
                 showAddDialog = false
+                toastState.show("추가되었습니다")
             },
-            onAddCategory = { /* 카테고리 추가는 TodoViewModel에서 처리 */ },
-            onDeleteCategory = { /* 카테고리 삭제는 TodoViewModel에서 처리 */ },
+            onAddCategory = { categoryName -> onIntent(CalendarIntent.AddCategory(categoryName)) },
+            onDeleteCategory = { categoryName -> onIntent(CalendarIntent.DeleteCategory(categoryName)) },
             onCancel = { showAddDialog = false }
         )
     }
@@ -390,16 +396,27 @@ private fun TodoItemInSheet(
         
         Spacer(modifier = Modifier.width(8.dp))
         
-        Text(
-            text = todo.title,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f),
-            color = if (todo.isCompleted) {
-                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-            } else {
-                MaterialTheme.colorScheme.onSurface
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = todo.title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (todo.isCompleted) {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
+            
+            // 카테고리 표시
+            if (todo.category.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = todo.category,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                )
             }
-        )
+        }
         
         // 삭제 버튼
         IconButton(

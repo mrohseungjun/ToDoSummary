@@ -32,8 +32,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +62,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.todosummer.core.domain.model.Priority
 import com.example.todosummer.core.domain.model.Todo
+import com.example.todosummer.core.ui.strings.Strings
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
@@ -412,6 +417,8 @@ private fun AdvancedOptionsDialog(
     onConfirm: () -> Unit
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    var selectedDateMillis by remember { mutableStateOf<Long?>(null) }
     var showReminderTimePicker by remember { mutableStateOf(false) }
     
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -576,28 +583,121 @@ private fun AdvancedOptionsDialog(
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        val instant = Instant.fromEpochMilliseconds(millis)
-                        val selectedDate = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-                        // 시간은 현재 시간으로 설정 (날짜만 변경)
-                        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-                        val finalDueDate = kotlinx.datetime.LocalDateTime(selectedDate.date, now.time)
-                        println("[TodoEdit] Due date selected=$finalDueDate")
-                        onDueDateChange(finalDueDate)
+                        selectedDateMillis = millis
+                        showDatePicker = false
+                        showTimePicker = true
                     }
-                    showDatePicker = false
                 }) {
-                    Text("확인")
+                    Text(Strings.next)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text("취소")
+                    Text(Strings.cancel)
                 }
             },
             shape = RoundedCornerShape(20.dp)
         ) {
-            DatePicker(state = datePickerState)
+            DatePicker(
+                state = datePickerState,
+                title = {
+                    Text(
+                        text = Strings.selectDueDate,
+                        modifier = Modifier.padding(start = 24.dp, end = 12.dp, top = 16.dp),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                },
+                headline = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val instant = Instant.fromEpochMilliseconds(millis)
+                        val date = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
+                        Text(
+                            text = Strings.formatDate(date.year, date.monthNumber, date.dayOfMonth),
+                            modifier = Modifier.padding(start = 24.dp, end = 12.dp, bottom = 12.dp),
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                    }
+                }
+            )
         }
+    }
+    
+    // 시간 선택 다이얼로그
+    if (showTimePicker && selectedDateMillis != null) {
+        val currentHour = dueDate?.hour ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).hour
+        val currentMinute = dueDate?.minute ?: 0
+        
+        val timePickerState = rememberTimePickerState(
+            initialHour = currentHour,
+            initialMinute = currentMinute,
+            is24Hour = true
+        )
+        
+        AlertDialog(
+            onDismissRequest = { 
+                showTimePicker = false
+                selectedDateMillis = null
+            },
+            title = { 
+                Text(
+                    text = Strings.selectDueTime,
+                    style = MaterialTheme.typography.titleLarge
+                ) 
+            },
+            text = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    // 선택된 날짜 표시
+                    selectedDateMillis?.let { millis ->
+                        val instant = Instant.fromEpochMilliseconds(millis)
+                        val date = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
+                        Text(
+                            text = Strings.formatDate(date.year, date.monthNumber, date.dayOfMonth),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                    
+                    TimePicker(state = timePickerState)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    selectedDateMillis?.let { millis ->
+                        val instant = Instant.fromEpochMilliseconds(millis)
+                        val selectedDate = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
+                        val selectedTime = kotlinx.datetime.LocalTime(timePickerState.hour, timePickerState.minute)
+                        val finalDueDate = kotlinx.datetime.LocalDateTime(selectedDate, selectedTime)
+                        println("[TodoEdit] Due date with time selected=$finalDueDate")
+                        onDueDateChange(finalDueDate)
+                    }
+                    showTimePicker = false
+                    selectedDateMillis = null
+                }) {
+                    Text(Strings.confirm)
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = { 
+                        showTimePicker = false
+                        showDatePicker = true
+                    }) {
+                        Text(Strings.previous)
+                    }
+                    TextButton(onClick = { 
+                        showTimePicker = false
+                        selectedDateMillis = null
+                    }) {
+                        Text(Strings.cancel)
+                    }
+                }
+            },
+            shape = RoundedCornerShape(20.dp)
+        )
     }
     
     // 알림 시간 선택 다이얼로그

@@ -74,6 +74,7 @@ interface StringResources {
     val settingsThemeLight: String
     val settingsThemeDark: String
     val settingsThemeSystem: String
+    val restartToApply: String
     
     // 네비게이션
     val navHome: String
@@ -171,6 +172,7 @@ class EnglishStringResources : StringResources {
     override val settingsThemeLight: String = "Light"
     override val settingsThemeDark: String = "Dark"
     override val settingsThemeSystem: String = "System Default"
+    override val restartToApply: String = "Restart app to apply"
     
     // 네비게이션
     override val navHome: String = "Home"
@@ -268,6 +270,7 @@ class KoreanStringResources : StringResources {
     override val settingsThemeLight: String = "라이트 모드"
     override val settingsThemeDark: String = "다크 모드"
     override val settingsThemeSystem: String = "시스템 기본값"
+    override val restartToApply: String = "앱을 재시작하면 적용됩니다"
     
     // 네비게이션
     override val navHome: String = "홈"
