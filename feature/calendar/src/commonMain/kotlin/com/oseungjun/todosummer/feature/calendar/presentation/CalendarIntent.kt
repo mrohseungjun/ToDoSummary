@@ -1,0 +1,25 @@
+package com.oseungjun.todosummer.feature.calendar.presentation
+
+import com.oseungjun.todosummer.core.domain.model.Priority
+import com.oseungjun.todosummer.core.domain.model.Todo
+import kotlinx.datetime.LocalDate
+
+/**
+ * 캘린더 화면의 사용자 인텐트
+ */
+sealed interface CalendarIntent {
+    data object Load : CalendarIntent
+    data class SelectDate(val date: LocalDate) : CalendarIntent
+    data class ChangeMonth(val yearMonth: YearMonth) : CalendarIntent
+    data object NavigateToPreviousMonth : CalendarIntent
+    data object NavigateToNextMonth : CalendarIntent
+    data object NavigateToToday : CalendarIntent
+    data class AddTodo(val date: LocalDate, val title: String, val priority: Priority, val category: String) : CalendarIntent
+    data class ToggleTodoCompletion(val todoId: String) : CalendarIntent
+    data class UpdateTodo(val todo: Todo) : CalendarIntent
+    data class DeleteTodo(val todoId: String) : CalendarIntent
+    
+    // 카테고리 관련
+    data class AddCategory(val name: String) : CalendarIntent
+    data class DeleteCategory(val name: String) : CalendarIntent
+}

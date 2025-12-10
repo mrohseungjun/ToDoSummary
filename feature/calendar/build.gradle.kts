@@ -19,5 +19,5 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.todosummer.feature.calendar"
+    namespace = "com.oseungjun.todosummer.feature.calendar"
 }

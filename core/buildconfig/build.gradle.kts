@@ -15,5 +15,5 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.todosummer.core.buildconfig"
+    namespace = "com.oseungjun.todosummer.core.buildconfig"
 }

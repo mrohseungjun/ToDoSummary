@@ -52,15 +52,16 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.todosummer"
+    namespace = "com.oseungjun.todosummer"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.example.todosummer"
+        applicationId = "com.oseungjun.todosummer"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+
+        versionCode = 2
+        versionName = "1.0.0"
     }
     packaging {
         resources {

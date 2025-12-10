@@ -27,7 +27,7 @@
 
         <!-- 알림 BroadcastReceiver -->
         <receiver
-            android:name="com.example.todosummer.core.data.notification.TodoNotificationReceiver"
+            android:name="com.oseungjun.todosummer.core.data.notification.TodoNotificationReceiver"
             android:enabled="true"
             android:exported="false" />
     </application>

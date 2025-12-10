@@ -18,7 +18,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.todosummer.core.domain"
+    namespace = "com.oseungjun.todosummer.core.domain"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     
     defaultConfig {

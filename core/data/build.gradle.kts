@@ -67,7 +67,7 @@ val localProps = Properties().apply {
 val geminiApiKey: String = localProps.getProperty("GEMINI_API_KEY") ?: ""
 
 android {
-    namespace = "com.example.todosummer.core.data"
+    namespace = "com.oseungjun.todosummer.core.data"
 
     buildFeatures {
         buildConfig = true

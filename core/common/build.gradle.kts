@@ -41,5 +41,5 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.todosummer.core.common"
+    namespace = "com.oseungjun.todosummer.core.common"
 }

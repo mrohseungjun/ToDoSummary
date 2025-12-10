@@ -28,5 +28,5 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.todosummer.core.ui"
+    namespace = "com.oseungjun.todosummer.core.ui"
 }
