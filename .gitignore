@@ -39,6 +39,9 @@ bin/
 gen/
 out/
 
+# Firebase
+**/google-services.json
+
 # IntelliJ
 .idea/workspace.xml
 .idea/tasks.xml

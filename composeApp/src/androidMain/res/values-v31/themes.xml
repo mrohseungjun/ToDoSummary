@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.TodoSummer" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <!-- 전체 배경 흰색 -->
+        <item name="android:windowBackground">@android:color/white</item>
+
+        <!-- Android 12+ 시스템 스플래시 설정 -->
+        <item name="android:windowSplashScreenBackground">@android:color/white</item>
+        <!-- 아이콘 없애기 (투명으로 지정) -->
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+
+        <!-- 필요하면 유지 -->
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
+    </style>
+
+    <style name="Theme.App.Starting" parent="Theme.TodoSummer" />
+</resources>

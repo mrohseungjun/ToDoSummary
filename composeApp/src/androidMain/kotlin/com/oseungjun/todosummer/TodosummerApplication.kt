@@ -3,6 +3,7 @@ package com.oseungjun.todosummer
 import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.oseungjun.todosummer.core.data.preferences.LanguagePreferences
 import com.oseungjun.todosummer.di.appModules
 import org.koin.android.ext.koin.androidContext
@@ -12,6 +13,9 @@ import java.util.Locale
 class TodosummerApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        // Firebase Crashlytics 초기화
+        FirebaseCrashlytics.getInstance().isCrashlyticsCollectionEnabled = true
+
         // Start Koin with Android context so data layer can resolve Context
         runCatching {
             startKoin {

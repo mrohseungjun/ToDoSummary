@@ -1,9 +1,7 @@
 package com.oseungjun.todosummer
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,31 +25,27 @@ fun App() {
 
     var showSplash by remember { mutableStateOf(true) }
     val logoPainter = rememberSplashLogoPainter()
+    
+    // 메인 화면용 상태 미리 초기화 (전환 시 깜빡임 방지)
+    val preferencesRepository: UserPreferencesRepository = koinInject()
+    val appState = remember { MainAppState(preferencesRepository) }
 
     MaterialTheme {
-        // 스플래시 화면
-        AnimatedVisibility(
-            visible = showSplash,
-            exit = fadeOut(animationSpec = tween(300))
-        ) {
-            SplashScreen(
-                onSplashFinished = { showSplash = false },
-                logoPainter = logoPainter
-            )
-        }
-        
-        // 메인 화면
-        AnimatedVisibility(
-            visible = !showSplash,
-            enter = fadeIn(animationSpec = tween(500))
-        ) {
-            // 앱 전역 상태
-            val preferencesRepository: UserPreferencesRepository = koinInject()
-            val appState = remember { MainAppState(preferencesRepository) }
-            
-            MainScreen(
-                appState = appState
-            )
+        Crossfade(
+            targetState = showSplash,
+            animationSpec = tween(400),
+            label = "splash_transition"
+        ) { isSplash ->
+            if (isSplash) {
+                SplashScreen(
+                    onSplashFinished = { showSplash = false },
+                    logoPainter = logoPainter
+                )
+            } else {
+                MainScreen(
+                    appState = appState
+                )
+            }
         }
     }
 }

@@ -10,7 +10,7 @@ androidx-espresso = "3.6.1"
 androidx-lifecycle = "2.9.1"
 androidx-testExt = "1.2.1"
 composeMultiplatform = "1.8.2"
-androidx-compose = "1.6.0"  
+androidx-compose = "1.6.0"
 junit = "4.13.2"
 kotlin = "2.2.0"
 detekt = "1.23.8"
@@ -25,6 +25,7 @@ room = "2.7.2"
 sqlite = "2.5.2"          # bundled sqlite
 ksp = "2.2.0-2.0.2"     # Kotlin 2.2.0 대응 KSP
 roborazzi = "1.0.0"
+firebase-bom = "33.7.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -62,6 +63,11 @@ room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 androidx-room-sqlite-wrapper = { module = "androidx.room:room-sqlite", version.ref = "room" } # (옵션, Android만)
+
+# Firebase
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx", version = "19.3.0" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics-ktx" }
 
 # Gradle Plugin marker artifacts (for convention plugins)
 ksp-gradle-plugin = { module = "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }

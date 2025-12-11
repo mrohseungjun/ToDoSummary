@@ -3,6 +3,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("todosummer.kmp.application")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 kotlin {
@@ -19,14 +21,12 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
             implementation(libs.koin.android)
+            
+            // Firebase Crashlytics
+            implementation(libs.firebase.crashlytics)
         }
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
+            // Lifecycle integration for Compose (not provided by convention plugin)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             
@@ -41,7 +41,7 @@ kotlin {
             implementation(project(":feature:settings"))
             implementation(project(":feature:main"))
             
-            // Koin
+            // Koin (DI)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
         }
@@ -60,7 +60,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
 
-        versionCode = 2
+        versionCode = 4
         versionName = "1.0.0"
     }
     packaging {

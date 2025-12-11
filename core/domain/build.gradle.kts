@@ -19,11 +19,6 @@ kotlin {
 
 android {
     namespace = "com.oseungjun.todosummer.core.domain"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-    
-    defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
-    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
